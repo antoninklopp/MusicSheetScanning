@@ -7,28 +7,29 @@ from best_fit import fit
 from rectangle import Rectangle
 from note import Note
 from random import randint
-from midiutil.MidiFile3 import MIDIFile
+from midiutil.MidiFile import MIDIFile
 
 staff_files = [
-    "resources/template/staff2.png", 
-    "resources/template/staff.png"]
+    "resources/template/staff.png",
+    "resources/template/staff2.png",
+    "resources/template/staff3.png"]
 quarter_files = [
-    "resources/template/quarter.png", 
+    "resources/template/quarter.png",
     "resources/template/solid-note.png"]
 sharp_files = [
     "resources/template/sharp.png"]
 flat_files = [
-    "resources/template/flat-line.png", 
+    "resources/template/flat-line.png",
     "resources/template/flat-space.png" ]
 half_files = [
-    "resources/template/half-space.png", 
+    "resources/template/half-space.png",
     "resources/template/half-note-line.png",
-    "resources/template/half-line.png", 
+    "resources/template/half-line.png",
     "resources/template/half-note-space.png"]
 whole_files = [
-    "resources/template/whole-space.png", 
+    "resources/template/whole-space.png",
     "resources/template/whole-note-line.png",
-    "resources/template/whole-line.png", 
+    "resources/template/whole-line.png",
     "resources/template/whole-note-space.png"]
 
 staff_imgs = [cv2.imread(staff_file, 0) for staff_file in staff_files]
@@ -80,12 +81,38 @@ def open_file(path):
     cmd = {'linux':'eog', 'win32':'explorer', 'darwin':'open'}[sys.platform]
     subprocess.run([cmd, path])
 
+def filter_image(img):
+    print(np.min(img))
+    print(np.max(img))
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            if img[i, j] < 200:
+                img[i, j] = 0
+            else:
+                img[i, j] = 255
+
+    return img
+
 if __name__ == "__main__":
     img_file = sys.argv[1:][0]
     img = cv2.imread(img_file, 0)
-    img_gray = img#cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.cvtColor(img_gray,cv2.COLOR_GRAY2RGB)
-    ret,img_gray = cv2.threshold(img_gray,127,255,cv2.THRESH_BINARY)
+    # img_gray = img#cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = cv2.cvtColor(img_gray,cv2.COLOR_GRAY2RGB)
+    # ret,img_gray = cv2.threshold(img_gray,127,255,cv2.THRESH_BINARY)
+
+    img_gray = filter_image(img)
+    cv2.imwrite("gray.png", img_gray)
+
+    img = cv2.imread(img_file, 0)
+    img_gray_color = filter_image(img)
+    img = np.zeros((img.shape[0], img.shape[1], 3))
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            img[i, j] = [img_gray_color[i, j], img_gray_color[i, j], img_gray_color[i, j]]
+    # ret,img_gray = cv2.threshold(img_gray,127,255,cv2.THRESH_BINARY)
+
+    cv2.imwrite("Test_gray.png", img)
+
     img_width, img_height = img_gray.shape[::-1]
 
     print("Matching staff image...")
@@ -104,7 +131,7 @@ if __name__ == "__main__":
     for r in staff_recs:
         r.draw(staff_recs_img, (0, 0, 255), 2)
     cv2.imwrite('staff_recs_img.png', staff_recs_img)
-    open_file('staff_recs_img.png')
+    # open_file('staff_recs_img.png')
 
     print("Discovering staff locations...")
     staff_boxes = merge_recs([Rectangle(0, r.y, img_width, r.h) for r in staff_recs], 0.01)
@@ -112,8 +139,8 @@ if __name__ == "__main__":
     for r in staff_boxes:
         r.draw(staff_boxes_img, (0, 0, 255), 2)
     cv2.imwrite('staff_boxes_img.png', staff_boxes_img)
-    open_file('staff_boxes_img.png')
-    
+    # open_file('staff_boxes_img.png')
+
     print("Matching sharp image...")
     sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
 
@@ -123,7 +150,7 @@ if __name__ == "__main__":
     for r in sharp_recs:
         r.draw(sharp_recs_img, (0, 0, 255), 2)
     cv2.imwrite('sharp_recs_img.png', sharp_recs_img)
-    open_file('sharp_recs_img.png')
+    # open_file('sharp_recs_img.png')
 
     print("Matching flat image...")
     flat_recs = locate_images(img_gray, flat_imgs, flat_lower, flat_upper, flat_thresh)
@@ -134,7 +161,7 @@ if __name__ == "__main__":
     for r in flat_recs:
         r.draw(flat_recs_img, (0, 0, 255), 2)
     cv2.imwrite('flat_recs_img.png', flat_recs_img)
-    open_file('flat_recs_img.png')
+    # open_file('flat_recs_img.png')
 
     print("Matching quarter image...")
     quarter_recs = locate_images(img_gray, quarter_imgs, quarter_lower, quarter_upper, quarter_thresh)
@@ -145,7 +172,7 @@ if __name__ == "__main__":
     for r in quarter_recs:
         r.draw(quarter_recs_img, (0, 0, 255), 2)
     cv2.imwrite('quarter_recs_img.png', quarter_recs_img)
-    open_file('quarter_recs_img.png')
+    # open_file('quarter_recs_img.png')
 
     print("Matching half image...")
     half_recs = locate_images(img_gray, half_imgs, half_lower, half_upper, half_thresh)
@@ -156,7 +183,7 @@ if __name__ == "__main__":
     for r in half_recs:
         r.draw(half_recs_img, (0, 0, 255), 2)
     cv2.imwrite('half_recs_img.png', half_recs_img)
-    open_file('half_recs_img.png')
+    # open_file('half_recs_img.png')
 
     print("Matching whole image...")
     whole_recs = locate_images(img_gray, whole_imgs, whole_lower, whole_upper, whole_thresh)
@@ -167,19 +194,20 @@ if __name__ == "__main__":
     for r in whole_recs:
         r.draw(whole_recs_img, (0, 0, 255), 2)
     cv2.imwrite('whole_recs_img.png', whole_recs_img)
-    open_file('whole_recs_img.png')
+    #open_file('whole_recs_img.png')
 
     note_groups = []
+    print(staff_boxes)
     for box in staff_boxes:
-        staff_sharps = [Note(r, "sharp", box) 
+        staff_sharps = [Note(r, "sharp", box)
             for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        staff_flats = [Note(r, "flat", box) 
+        staff_flats = [Note(r, "flat", box)
             for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        quarter_notes = [Note(r, "4,8", box, staff_sharps, staff_flats) 
+        quarter_notes = [Note(r, "4,8", box, staff_sharps, staff_flats)
             for r in quarter_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        half_notes = [Note(r, "2", box, staff_sharps, staff_flats) 
+        half_notes = [Note(r, "2", box, staff_sharps, staff_flats)
             for r in half_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        whole_notes = [Note(r, "1", box, staff_sharps, staff_flats) 
+        whole_notes = [Note(r, "1", box, staff_sharps, staff_flats)
             for r in whole_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         staff_notes = quarter_notes + half_notes + whole_notes
         staff_notes.sort(key=lambda n: n.rec.x)
@@ -188,7 +216,7 @@ if __name__ == "__main__":
         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
         note_group = []
         i = 0; j = 0;
-        while(i < len(staff_notes)):
+        while(i < len(staff_notes) and j < len(staffs)):
             if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
                 r = staffs[j]
                 j += 1;
@@ -209,23 +237,23 @@ if __name__ == "__main__":
     flat_recs_img = img.copy()
     for r in flat_recs:
         r.draw(img, (0, 0, 255), 2)
-        
+
     cv2.imwrite('res.png', img)
     open_file('res.png')
-   
+
     for note_group in note_groups:
         print([ note.note + " " + note.sym for note in note_group])
 
     midi = MIDIFile(1)
-     
-    track = 0   
+
+    track = 0
     time = 0
     channel = 0
     volume = 100
-    
+
     midi.addTrackName(track, time, "Track")
     midi.addTempo(track, time, 140)
-    
+
     for note_group in note_groups:
         duration = None
         for note in note_group:
@@ -245,4 +273,4 @@ if __name__ == "__main__":
     binfile = open("output.mid", 'wb')
     midi.writeFile(binfile)
     binfile.close()
-    open_file('output.mid')
+    # open_file('output.mid')
