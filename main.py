@@ -8,11 +8,9 @@ from rectangle import Rectangle
 from note import Note
 from random import randint
 from midiutil.MidiFile import MIDIFile
+import glob
 
-staff_files = [
-    "resources/template/staff.png",
-    "resources/template/staff2.png",
-    "resources/template/staff3.png"]
+staff_files = glob.glob("resources/template/staff*.png") + glob.glob("resources/template/created/staff*.png")
 quarter_files = [
     "resources/template/quarter.png",
     "resources/template/solid-note.png"]
@@ -39,12 +37,12 @@ flat_imgs = [cv2.imread(flat_file, 0) for flat_file in flat_files]
 half_imgs = [cv2.imread(half_file, 0) for half_file in half_files]
 whole_imgs = [cv2.imread(whole_file, 0) for whole_file in whole_files]
 
-staff_lower, staff_upper, staff_thresh = 50, 150, 0.77
-sharp_lower, sharp_upper, sharp_thresh = 50, 150, 0.70
-flat_lower, flat_upper, flat_thresh = 50, 150, 0.77
-quarter_lower, quarter_upper, quarter_thresh = 50, 150, 0.70
-half_lower, half_upper, half_thresh = 50, 150, 0.70
-whole_lower, whole_upper, whole_thresh = 50, 150, 0.70
+staff_lower, staff_upper, staff_thresh = 45, 150, 0.77
+sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.70
+flat_lower, flat_upper, flat_thresh = 45, 150, 0.77
+quarter_lower, quarter_upper, quarter_thresh = 45, 150, 0.75
+half_lower, half_upper, half_thresh = 45, 150, 0.75
+whole_lower, whole_upper, whole_thresh = 45, 150, 0.60
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -110,8 +108,6 @@ if __name__ == "__main__":
         for j in range(img.shape[1]):
             img[i, j] = [img_gray_color[i, j], img_gray_color[i, j], img_gray_color[i, j]]
     # ret,img_gray = cv2.threshold(img_gray,127,255,cv2.THRESH_BINARY)
-
-    cv2.imwrite("Test_gray.png", img)
 
     img_width, img_height = img_gray.shape[::-1]
 
@@ -216,27 +212,43 @@ if __name__ == "__main__":
         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
         note_group = []
         i = 0; j = 0;
+        note_int = 0
         while(i < len(staff_notes) and j < len(staffs)):
+            if (staff_notes[i].initialized is False):
+                if (i < len(staff_notes)):
+                    i += 1
+                else:
+                    j += 1
+                continue
             if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
                 r = staffs[j]
                 j += 1;
                 if len(note_group) > 0:
                     note_groups.append(note_group)
                     note_group = []
+                # We save notes to try to be better next time
+                note = img_gray[int(staff_notes[i].rec.y):int(staff_notes[i].rec.y+staff_notes[i].rec.h), \
+                    int(staff_notes[i].rec.x):int(staff_notes[i].rec.x+staff_notes[i].rec.w)]
+                cv2.imwrite("resources/template/created/quarter_a_note" + str(note_int) + ".png", note)
+                note_int += 1
                 note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
             else:
+                note = img_gray[int(staff_notes[i].rec.y):int(staff_notes[i].rec.y+staff_notes[i].rec.h), \
+                    int(staff_notes[i].rec.x):int(staff_notes[i].rec.x+staff_notes[i].rec.w)]
+                cv2.imwrite("resources/template/created/quarter_a_note" + str(note_int) + ".png", note)
+                note_int += 1
                 note_group.append(staff_notes[i])
                 staff_notes[i].rec.draw(img, note_color, 2)
                 i += 1
         note_groups.append(note_group)
 
     for r in staff_boxes:
-        r.draw(img, (0, 0, 255), 2)
+        r.draw(img, (0, 0, 255), 1)
     for r in sharp_recs:
-        r.draw(img, (0, 0, 255), 2)
+        r.draw(img, (0, 0, 255), 1)
     flat_recs_img = img.copy()
     for r in flat_recs:
-        r.draw(img, (0, 0, 255), 2)
+        r.draw(img, (0, 0, 255), 1)
 
     cv2.imwrite('res.png', img)
     open_file('res.png')

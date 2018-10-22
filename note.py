@@ -1,4 +1,6 @@
 from rectangle import Rectangle
+import cv2
+import numpy as np
 
 note_step = 0.0625
 
@@ -28,12 +30,18 @@ note_defs = {
 }
 
 class Note(object):
+
+    initialized = False
+
     def __init__(self, rec, sym, staff_rec, sharp_notes = [], flat_notes = []):
         self.rec = rec
         self.sym = sym
 
         middle = rec.y + (rec.h / 2.0)
         height = (middle - staff_rec.y) / staff_rec.h
+        if (-4 > int(height/note_step + 0.5)) or (int(height/note_step + 0.5) >= 18):
+            print("Error recognition Note")
+            return
         note_def = note_defs[int(height/note_step + 0.5)]
         self.note = note_def[0]
         self.pitch = note_def[1]
@@ -44,4 +52,4 @@ class Note(object):
             self.note += "b"
             self.pitch -= 1
 
-
+        self.initialized = True
