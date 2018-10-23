@@ -10,8 +10,8 @@ from random import randint
 from midiutil.MidiFile import MIDIFile
 import glob
 
-staff_files = ["resources/template/staff.png",
-"resources/template/staff2.png"]
+staff_files = ["resources/template/staff4a.png",
+"resources/template/staff5a.png"]
 
 quarter_files = [
     "resources/template/quarter.png",
@@ -39,9 +39,9 @@ flat_imgs = [cv2.imread(flat_file, 0) for flat_file in flat_files]
 half_imgs = [cv2.imread(half_file, 0) for half_file in half_files]
 whole_imgs = [cv2.imread(whole_file, 0) for whole_file in whole_files]
 
-staff_lower, staff_upper, staff_thresh = 45, 150, 0.77
-sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.70
-flat_lower, flat_upper, flat_thresh = 45, 150, 0.77
+staff_lower, staff_upper, staff_thresh = 45, 150, 0.65
+sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.65
+flat_lower, flat_upper, flat_thresh = 45, 150, 0.70
 quarter_lower, quarter_upper, quarter_thresh = 45, 150, 0.75
 half_lower, half_upper, half_thresh = 45, 150, 0.65
 whole_lower, whole_upper, whole_thresh = 45, 150, 0.60
@@ -273,29 +273,29 @@ if __name__ == "__main__":
         note_group = []
         i = 0; j = 0;
         note_int = 0
-        note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
-        for i in range(len(staff_notes)):
-            staff_notes[i].rec.draw(img, note_color, 2)
-        # while(i < len(staff_notes) and j < len(staffs)):
-        #     if (staff_notes[i].initialized is False):
-        #         print("ERROR")
-        #         if (i < len(staff_notes)):
-        #             i += 1
-        #         else:
-        #             j += 1
-        #         continue
-        #     if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
-        #         r = staffs[j]
-        #         j += 1;
-        #         if len(note_group) > 0:
-        #             note_groups.append(note_group)
-        #             note_group = []
-        #         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
-        #     else:
-        #         note_int += 1
-        #         note_group.append(staff_notes[i])
-        #         staff_notes[i].rec.draw(img, note_color, 2)
-        #         i += 1
+        # note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
+        # for i in range(len(staff_notes)):
+        #     staff_notes[i].rec.draw(img, note_color, 2)
+        while(i < len(staff_notes) and j < len(staffs)):
+            if (staff_notes[i].initialized is False):
+                print("ERROR")
+                if (i < len(staff_notes)):
+                    i += 1
+                else:
+                    j += 1
+                continue
+            if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
+                r = staffs[j]
+                j += 1;
+                if len(note_group) > 0:
+                    note_groups.append(note_group)
+                    note_group = []
+                note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
+            else:
+                note_int += 1
+                note_group.append(staff_notes[i])
+                staff_notes[i].rec.draw(img, note_color, 2)
+                i += 1
         note_groups.append(note_group)
 
     for r in staff_boxes:
