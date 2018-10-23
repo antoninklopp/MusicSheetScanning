@@ -24,7 +24,7 @@ def fit(img, templates, start_percent, stop_percent, threshold):
             location_count += len(result[0])
             locations += [result]
         print("scale: {0}, hits: {1}".format(scale, location_count))
-        x.append(locations)
+        x.append(location_count)
         y.append(scale)
         # plt.plot(y, x)
         # plt.pause(0.00001)
@@ -37,4 +37,4 @@ def fit(img, templates, start_percent, stop_percent, threshold):
             pass
     # plt.close()
 
-    return x, y
+    return best_locations, best_scale

@@ -10,7 +10,9 @@ from random import randint
 from midiutil.MidiFile import MIDIFile
 import glob
 
-staff_files = glob.glob("resources/template/staff*")
+staff_files = ["resources/template/staff.png",
+"resources/template/staff2.png"]
+
 quarter_files = [
     "resources/template/quarter.png",
     "resources/template/solid-note.png"]
@@ -41,19 +43,18 @@ staff_lower, staff_upper, staff_thresh = 45, 150, 0.77
 sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.70
 flat_lower, flat_upper, flat_thresh = 45, 150, 0.77
 quarter_lower, quarter_upper, quarter_thresh = 45, 150, 0.75
-half_lower, half_upper, half_thresh = 45, 150, 0.75
+half_lower, half_upper, half_thresh = 45, 150, 0.65
 whole_lower, whole_upper, whole_thresh = 45, 150, 0.60
 
 
 def locate_images(img, templates, start, stop, threshold):
-    locations, scales = fit(img, templates, start, stop, threshold)
+    locations, scale = fit(img, templates, start, stop, threshold)
     img_locations = []
-    for location, scale in zip(locations, scales):
-        for i in range(len(templates)):
-            w, h = templates[i].shape[::-1]
-            w *= scale
-            h *= scale
-            img_locations.append([Rectangle(pt[0], pt[1], w, h, scale) for pt in zip(*location[i][::-1])])
+    for i in range(len(templates)):
+        w, h = templates[i].shape[::-1]
+        w *= scale
+        h *= scale
+        img_locations.append([Rectangle(pt[0], pt[1], w, h, scale) for pt in zip(*locations[i][::-1])])
     return img_locations
 
 def merge_recs(recs, threshold):
@@ -80,12 +81,25 @@ def open_file(path):
     cmd = {'linux':'eog', 'win32':'explorer', 'darwin':'open'}[sys.platform]
     subprocess.run([cmd, path])
 
-def filter_image(img):
+def filter_image(img, filter_gaussian=False):
     print(np.min(img))
     print(np.max(img))
+
+    print("filtré")
+    # if filter_gaussian is True:
+    #     kernel = np.array([[0.04, 0.04, 0.04, 0.04, 0.04],
+    #     [0.12, 0.12, 0.12, 0.12, 0.12],
+    #     [0.04, 0.04, 0.04, 0.04, 0.04]])
+    #     img = cv2.filter2D(img,-1,kernel)
+
+    if filter_gaussian is True:
+        thresh = 150
+    else:
+        thresh = 200
+
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            if img[i, j] < 200:
+            if img[i, j] < thresh:
                 img[i, j] = 0
             else:
                 img[i, j] = 255
@@ -112,6 +126,11 @@ if __name__ == "__main__":
 
     img_width, img_height = img_gray.shape[::-1]
 
+    staff_output = np.zeros((img.shape[0], img.shape[1], 3))
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            staff_output[i, j] = [img_gray_color[i, j], img_gray_color[i, j], img_gray_color[i, j]]
+
     for staff in staff_files:
         staff_imgs = [cv2.imread(staff, 0)]
         print("Matching staff image...")
@@ -124,14 +143,31 @@ if __name__ == "__main__":
         avg = np.mean(list(set(histo)))
         staff_recs = [r for r in staff_recs if histo[r.y] > avg]
 
-    #     staff_img = cv2.imread("resources/template/staff.png", 0)
-    #     for rec in staff_recs:
-    #         staff_img_local = cv2.resize(staff_img, (0,0), fx=rec.scale, fy=rec.scale)
-    #         for i in range(staff_img_local.shape[0]):
-    #             for j in range(staff_img_local.shape[1]):
-    #                 img_gray[i + rec.y, j + rec.x] = 255
-    #
-    # cv2.imwrite("test_remove_staff.png", img_gray)
+        staff_img = cv2.imread(staff, 0)
+
+        # filtering rectangles
+        # rec_filtered = [staff_recs[0]]
+        # for rec in staff_recs:
+        #     for r_filtered in rec_filtered:
+        #         if abs(rec.y - r_filtered.y) < 10:
+        #             break
+        #     else:
+        #         print(rec.y)
+        #         rec_filtered.append(rec)
+
+        # print("nombre de staffs", len(rec_filtered))
+        # print("shape staff_output", staff_output.shape)
+        # for number, rec in enumerate(rec_filtered):
+        #     print("rec numero", number)
+        #     staff_img_local = cv2.resize(staff_img, (0,0), fx=rec.scale, fy=rec.scale)
+        #     cv2.imwrite("resized_staff.png", staff_img_local)
+        #     for i in range(staff_img_local.shape[0]):
+        #         for j in range(img_gray.shape[1]):
+        #             if staff_img_local[i, int(staff_img_local.shape[1]/2)] < 50:
+        #                 # img_gray[i + rec.y, j] = 255
+        #                 staff_output[i + rec.y, j] = [255, 0, 0]
+        #
+        # cv2.imwrite("test_remove_staff.png", staff_output)
 
     print("Merging staff image results...")
     staff_recs = merge_recs(staff_recs, 0.01)
@@ -148,6 +184,9 @@ if __name__ == "__main__":
         r.draw(staff_boxes_img, (0, 0, 255), 2)
     cv2.imwrite('staff_boxes_img.png', staff_boxes_img)
     # open_file('staff_boxes_img.png')
+
+    img_import = cv2.imread(img_file, 0)
+    img_gray = filter_image(img_import, True)
 
     print("Matching sharp image...")
     sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
@@ -208,13 +247,20 @@ if __name__ == "__main__":
 
     note_groups = []
     print(staff_boxes)
-    for box in staff_boxes:
+
+    staff_boxes.sort(key=lambda rec : rec.x)
+
+    for n_box, box in enumerate(staff_boxes):
+        print("MIDDLE", box.middle[1])
         staff_sharps = [Note(r, "sharp", box)
             for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         staff_flats = [Note(r, "flat", box)
             for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         quarter_notes = [Note(r, "4,8", box, staff_sharps, staff_flats)
             for r in quarter_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
+        if n_box == 2:
+            for r in quarter_recs:
+                print(abs(r.middle[1] - box.middle[1]), box.h*5.0/8.0, abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0, box.middle[1])
         half_notes = [Note(r, "2", box, staff_sharps, staff_flats)
             for r in half_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         whole_notes = [Note(r, "1", box, staff_sharps, staff_flats)
@@ -227,33 +273,29 @@ if __name__ == "__main__":
         note_group = []
         i = 0; j = 0;
         note_int = 0
-        while(i < len(staff_notes) and j < len(staffs)):
-            if (staff_notes[i].initialized is False):
-                if (i < len(staff_notes)):
-                    i += 1
-                else:
-                    j += 1
-                continue
-            if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
-                r = staffs[j]
-                j += 1;
-                if len(note_group) > 0:
-                    note_groups.append(note_group)
-                    note_group = []
-                # We save notes to try to be better next time
-                note = img_gray[int(staff_notes[i].rec.y):int(staff_notes[i].rec.y+staff_notes[i].rec.h), \
-                    int(staff_notes[i].rec.x):int(staff_notes[i].rec.x+staff_notes[i].rec.w)]
-                cv2.imwrite("resources/template/created/quarter_a_note" + str(note_int) + ".png", note)
-                note_int += 1
-                note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
-            else:
-                note = img_gray[int(staff_notes[i].rec.y):int(staff_notes[i].rec.y+staff_notes[i].rec.h), \
-                    int(staff_notes[i].rec.x):int(staff_notes[i].rec.x+staff_notes[i].rec.w)]
-                cv2.imwrite("resources/template/created/quarter_a_note" + str(note_int) + ".png", note)
-                note_int += 1
-                note_group.append(staff_notes[i])
-                staff_notes[i].rec.draw(img, note_color, 2)
-                i += 1
+        note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
+        for i in range(len(staff_notes)):
+            staff_notes[i].rec.draw(img, note_color, 2)
+        # while(i < len(staff_notes) and j < len(staffs)):
+        #     if (staff_notes[i].initialized is False):
+        #         print("ERROR")
+        #         if (i < len(staff_notes)):
+        #             i += 1
+        #         else:
+        #             j += 1
+        #         continue
+        #     if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
+        #         r = staffs[j]
+        #         j += 1;
+        #         if len(note_group) > 0:
+        #             note_groups.append(note_group)
+        #             note_group = []
+        #         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
+        #     else:
+        #         note_int += 1
+        #         note_group.append(staff_notes[i])
+        #         staff_notes[i].rec.draw(img, note_color, 2)
+        #         i += 1
         note_groups.append(note_group)
 
     for r in staff_boxes:

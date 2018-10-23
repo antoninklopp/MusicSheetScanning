@@ -40,7 +40,7 @@ class Note(object):
         middle = rec.y + (rec.h / 2.0)
         height = (middle - staff_rec.y) / staff_rec.h
         if (-4 > int(height/note_step + 0.5)) or (int(height/note_step + 0.5) >= 18):
-            print("Error recognition Note")
+            print("Error recognition Note", (int(height/note_step + 0.5)))
             return
         note_def = note_defs[int(height/note_step + 0.5)]
         self.note = note_def[0]
