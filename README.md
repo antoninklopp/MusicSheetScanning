@@ -2,7 +2,9 @@
 
 This project is a fork of the Sheet vision project, that can be found here : https://github.com/cal-pratt/SheetVision
 
-I am trying to upgrade this project to make it work on scans or lower quality images. 
+I am trying to upgrade this project to make it work on scans or lower quality images.
+
+Switch to the test branch to see the latest commits. 
 
 
 ## Sheet Vision
