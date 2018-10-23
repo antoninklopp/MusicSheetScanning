@@ -2,13 +2,14 @@ import cv2
 import math
 
 class Rectangle(object):
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, scale=1):
         self.x = x;
         self.y = y;
         self.w = w;
         self.h = h;
         self.middle = self.x + self.w/2, self.y + self.h/2
         self.area = self.w * self.h
+        self.scale = scale
 
     def overlap(self, other):
         overlap_x = max(0, min(self.x + self.w, other.x + other.w) - max(self.x, other.x));

@@ -10,7 +10,7 @@ from random import randint
 from midiutil.MidiFile import MIDIFile
 import glob
 
-staff_files = glob.glob("resources/template/staff*.png") + glob.glob("resources/template/created/staff*.png")
+staff_files = glob.glob("resources/template/staff*")
 quarter_files = [
     "resources/template/quarter.png",
     "resources/template/solid-note.png"]
@@ -46,13 +46,14 @@ whole_lower, whole_upper, whole_thresh = 45, 150, 0.60
 
 
 def locate_images(img, templates, start, stop, threshold):
-    locations, scale = fit(img, templates, start, stop, threshold)
+    locations, scales = fit(img, templates, start, stop, threshold)
     img_locations = []
-    for i in range(len(templates)):
-        w, h = templates[i].shape[::-1]
-        w *= scale
-        h *= scale
-        img_locations.append([Rectangle(pt[0], pt[1], w, h) for pt in zip(*locations[i][::-1])])
+    for location, scale in zip(locations, scales):
+        for i in range(len(templates)):
+            w, h = templates[i].shape[::-1]
+            w *= scale
+            h *= scale
+            img_locations.append([Rectangle(pt[0], pt[1], w, h, scale) for pt in zip(*location[i][::-1])])
     return img_locations
 
 def merge_recs(recs, threshold):
@@ -111,15 +112,26 @@ if __name__ == "__main__":
 
     img_width, img_height = img_gray.shape[::-1]
 
-    print("Matching staff image...")
-    staff_recs = locate_images(img_gray, staff_imgs, staff_lower, staff_upper, staff_thresh)
+    for staff in staff_files:
+        staff_imgs = [cv2.imread(staff, 0)]
+        print("Matching staff image...")
+        staff_recs = locate_images(img_gray, staff_imgs, staff_lower, staff_upper, staff_thresh)
 
-    print("Filtering weak staff matches...")
-    staff_recs = [j for i in staff_recs for j in i]
-    heights = [r.y for r in staff_recs] + [0]
-    histo = [heights.count(i) for i in range(0, max(heights) + 1)]
-    avg = np.mean(list(set(histo)))
-    staff_recs = [r for r in staff_recs if histo[r.y] > avg]
+        print("Filtering weak staff matches...")
+        staff_recs = [j for i in staff_recs for j in i]
+        heights = [r.y for r in staff_recs] + [0]
+        histo = [heights.count(i) for i in range(0, max(heights) + 1)]
+        avg = np.mean(list(set(histo)))
+        staff_recs = [r for r in staff_recs if histo[r.y] > avg]
+
+    #     staff_img = cv2.imread("resources/template/staff.png", 0)
+    #     for rec in staff_recs:
+    #         staff_img_local = cv2.resize(staff_img, (0,0), fx=rec.scale, fy=rec.scale)
+    #         for i in range(staff_img_local.shape[0]):
+    #             for j in range(staff_img_local.shape[1]):
+    #                 img_gray[i + rec.y, j + rec.x] = 255
+    #
+    # cv2.imwrite("test_remove_staff.png", img_gray)
 
     print("Merging staff image results...")
     staff_recs = merge_recs(staff_recs, 0.01)
@@ -160,14 +172,16 @@ if __name__ == "__main__":
     # open_file('flat_recs_img.png')
 
     print("Matching quarter image...")
-    quarter_recs = locate_images(img_gray, quarter_imgs, quarter_lower, quarter_upper, quarter_thresh)
+    for quarter in quarter_files:
+        quater_imgs = [cv2.imread(quarter, 0)]
+        quarter_recs = locate_images(img_gray, quarter_imgs, quarter_lower, quarter_upper, quarter_thresh)
 
-    print("Merging quarter image results...")
-    quarter_recs = merge_recs([j for i in quarter_recs for j in i], 0.5)
-    quarter_recs_img = img.copy()
-    for r in quarter_recs:
-        r.draw(quarter_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('quarter_recs_img.png', quarter_recs_img)
+        print("Merging quarter image results...")
+        quarter_recs = merge_recs([j for i in quarter_recs for j in i], 0.5)
+        quarter_recs_img = img.copy()
+        for r in quarter_recs:
+            r.draw(quarter_recs_img, (0, 0, 255), 2)
+        cv2.imwrite('quarter_recs_img.png', quarter_recs_img)
     # open_file('quarter_recs_img.png')
 
     print("Matching half image...")
