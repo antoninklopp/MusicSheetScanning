@@ -31,6 +31,8 @@ whole_files = [
     "resources/template/whole-note-line.png",
     "resources/template/whole-line.png",
     "resources/template/whole-note-space.png"]
+bars_files = ["resources/template/measure.png",
+"resources/template/measure2.png"]
 
 staff_imgs = [cv2.imread(staff_file, 0) for staff_file in staff_files]
 quarter_imgs = [cv2.imread(quarter_file, 0) for quarter_file in quarter_files]
@@ -38,6 +40,7 @@ sharp_imgs = [cv2.imread(sharp_files, 0) for sharp_files in sharp_files]
 flat_imgs = [cv2.imread(flat_file, 0) for flat_file in flat_files]
 half_imgs = [cv2.imread(half_file, 0) for half_file in half_files]
 whole_imgs = [cv2.imread(whole_file, 0) for whole_file in whole_files]
+bars_imgs = [cv2.imread(bars_file, 0) for bars_file in bars_files]
 
 staff_lower, staff_upper, staff_thresh = 45, 150, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.65
@@ -45,6 +48,7 @@ flat_lower, flat_upper, flat_thresh = 45, 150, 0.70
 quarter_lower, quarter_upper, quarter_thresh = 45, 150, 0.75
 half_lower, half_upper, half_thresh = 45, 150, 0.65
 whole_lower, whole_upper, whole_thresh = 45, 150, 0.60
+bars_lower, bars_upper, bars_thresh = 45, 150, 0.80
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -145,30 +149,6 @@ if __name__ == "__main__":
 
         staff_img = cv2.imread(staff, 0)
 
-        # filtering rectangles
-        # rec_filtered = [staff_recs[0]]
-        # for rec in staff_recs:
-        #     for r_filtered in rec_filtered:
-        #         if abs(rec.y - r_filtered.y) < 10:
-        #             break
-        #     else:
-        #         print(rec.y)
-        #         rec_filtered.append(rec)
-
-        # print("nombre de staffs", len(rec_filtered))
-        # print("shape staff_output", staff_output.shape)
-        # for number, rec in enumerate(rec_filtered):
-        #     print("rec numero", number)
-        #     staff_img_local = cv2.resize(staff_img, (0,0), fx=rec.scale, fy=rec.scale)
-        #     cv2.imwrite("resized_staff.png", staff_img_local)
-        #     for i in range(staff_img_local.shape[0]):
-        #         for j in range(img_gray.shape[1]):
-        #             if staff_img_local[i, int(staff_img_local.shape[1]/2)] < 50:
-        #                 # img_gray[i + rec.y, j] = 255
-        #                 staff_output[i + rec.y, j] = [255, 0, 0]
-        #
-        # cv2.imwrite("test_remove_staff.png", staff_output)
-
     print("Merging staff image results...")
     staff_recs = merge_recs(staff_recs, 0.01)
     staff_recs_img = img.copy()
@@ -185,8 +165,19 @@ if __name__ == "__main__":
     cv2.imwrite('staff_boxes_img.png', staff_boxes_img)
     # open_file('staff_boxes_img.png')
 
+    print("Discovering measuring bars image...")
+    bars_recs = locate_images(img_gray, bars_imgs, bars_lower, bars_upper, bars_thresh)
+
+    print("Merging flat image results...")
+    bars_recs = merge_recs([j for i in bars_recs for j in i], 0.5)
+    bars_recs_img = img.copy()
+    for r in bars_recs:
+        r.draw(bars_recs_img, (0, 0, 255), 2)
+    cv2.imwrite('bars_measure_img.png', bars_recs_img)
+
     img_import = cv2.imread(img_file, 0)
     img_gray = filter_image(img_import, True)
+    cv2.imwrite("gray.png", img_gray)
 
     print("Matching sharp image...")
     sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
