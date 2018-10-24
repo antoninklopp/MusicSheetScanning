@@ -33,3 +33,8 @@ class Rectangle(object):
         pos = ((int)(self.x), (int)(self.y))
         size = ((int)(self.x + self.w), (int)(self.y + self.h))
         cv2.rectangle(img, pos, size, color, thickness)
+
+    def contains_in_x(self, other):
+        if (self.y < other.y) and (other.y + other.w < self.y + self.w):
+            return True
+        return False

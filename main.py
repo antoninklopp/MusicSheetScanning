@@ -36,7 +36,7 @@ bars_files = ["resources/template/measure.png",
 
 #time
 doubles_files = glob.glob("resources/template/doubles*.png")
-croches_files = glob.glob("resources/templaye/croches*.png")
+croches_files = glob.glob("resources/template/croches*.png")
 
 staff_imgs = [cv2.imread(staff_file, 0) for staff_file in staff_files]
 quarter_imgs = [cv2.imread(quarter_file, 0) for quarter_file in quarter_files]
@@ -46,7 +46,7 @@ half_imgs = [cv2.imread(half_file, 0) for half_file in half_files]
 whole_imgs = [cv2.imread(whole_file, 0) for whole_file in whole_files]
 bars_imgs = [cv2.imread(bars_file, 0) for bars_file in bars_files]
 doubles_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
-croches_imgs = [cv2.imread(croches_files, 0) for croches_file in croches_files]
+croches_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
 
 staff_lower, staff_upper, staff_thresh = 45, 150, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.65
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     print("Merging croches image results...")
     croches_recs = merge_recs([j for i in croches_recs for j in i], 0.5)
     croches_recs_img = img.copy()
-    for r in doubles_recs:
+    for r in croches_recs:
         r.draw(croches_recs_img, (0, 0, 255), 2)
     cv2.imwrite('output/croches_recs_img.png', croches_recs_img)
 
@@ -270,12 +270,12 @@ if __name__ == "__main__":
     staff_boxes.sort(key=lambda rec : rec.x)
 
     for n_box, box in enumerate(staff_boxes):
-        print("MIDDLE", box.middle[1])
+        print("MIDDLE", box.middle[1], box.w, box.h)
         staff_sharps = [Note(r, "sharp", box)
             for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         staff_flats = [Note(r, "flat", box)
             for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        quarter_notes = [Note(r, "4,8", box, staff_sharps, staff_flats)
+        quarter_notes = [Note(r, "4", box, staff_sharps, staff_flats)
             for r in quarter_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         if n_box == 2:
             for r in quarter_recs:
@@ -284,38 +284,50 @@ if __name__ == "__main__":
             for r in half_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         whole_notes = [Note(r, "1", box, staff_sharps, staff_flats)
             for r in whole_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
+
+        for t in doubles_recs:
+            for q in quarter_notes:
+                if q.rec.overlap(box) > 0 and t.overlap(box) > 0 and t.contains_in_x(q.rec):
+                    q.sym = "16"
+
+        # for t in croches_recs:
+        #     for q in quarter_notes:
+        #         if q.rec.overlap(box):
+        #             if t.contains_in_x(q.rec):
+        #                 q.sym = "8"
+
         staff_notes = quarter_notes + half_notes + whole_notes
         staff_notes.sort(key=lambda n: n.rec.x)
         staffs = [r for r in staff_recs if r.overlap(box) > 0]
         staffs.sort(key=lambda r: r.x)
+
         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
         note_group = []
         i = 0; j = 0;
         note_int = 0
-        # note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
-        # for i in range(len(staff_notes)):
-        #     staff_notes[i].rec.draw(img, note_color, 2)
-        while(i < len(staff_notes) and j < len(staffs)):
-            if (staff_notes[i].initialized is False):
-                print("ERROR")
-                if (i < len(staff_notes)):
-                    i += 1
-                else:
-                    j += 1
-                continue
-            if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
-                r = staffs[j]
-                j += 1;
-                if len(note_group) > 0:
-                    note_groups.append(note_group)
-                    note_group = []
-                note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
-            else:
-                note_int += 1
-                note_group.append(staff_notes[i])
-                staff_notes[i].rec.draw(img, note_color, 2)
-                i += 1
-        note_groups.append(note_group)
+        for i in range(len(staff_notes)):
+            staff_notes[i].rec.draw(img, staff_notes[i].get_color(), 1)
+        # while(i < len(staff_notes) and j < len(staffs)):
+        #     if (staff_notes[i].initialized is False):
+        #         print("ERROR")
+        #         if (i < len(staff_notes)):
+        #             i += 1
+        #         else:
+        #             j += 1
+        #         continue
+        #     if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
+        #         r = staffs[j]
+        #         j += 1;
+        #         if len(note_group) > 0:
+        #             note_groups.append(note_group)
+        #             note_group = []
+        #         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
+        #     else:
+        #         note_int += 1
+        #         note_group.append(staff_notes[i])
+        #         staff_notes[i].rec.draw(img, note_color, 2)
+        #         i += 1
+        # note_groups.append(note_group)
 
     for r in staff_boxes:
         r.draw(img, (0, 0, 255), 1)
