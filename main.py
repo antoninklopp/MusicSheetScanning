@@ -34,6 +34,10 @@ whole_files = [
 bars_files = ["resources/template/measure.png",
 "resources/template/measure2.png"]
 
+#time 
+doubles_files = glob.glob("resources/template/doubles*.png")
+croches_files = glob.glob("resources/templaye/croches*.png")
+
 staff_imgs = [cv2.imread(staff_file, 0) for staff_file in staff_files]
 quarter_imgs = [cv2.imread(quarter_file, 0) for quarter_file in quarter_files]
 sharp_imgs = [cv2.imread(sharp_files, 0) for sharp_files in sharp_files]
@@ -41,6 +45,8 @@ flat_imgs = [cv2.imread(flat_file, 0) for flat_file in flat_files]
 half_imgs = [cv2.imread(half_file, 0) for half_file in half_files]
 whole_imgs = [cv2.imread(whole_file, 0) for whole_file in whole_files]
 bars_imgs = [cv2.imread(bars_file, 0) for bars_file in bars_files]
+doubles_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
+croches_imgs = [cv2.imread(croches_files, 0) for croches_file in croches_files]
 
 staff_lower, staff_upper, staff_thresh = 45, 150, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.65
@@ -49,6 +55,8 @@ quarter_lower, quarter_upper, quarter_thresh = 45, 150, 0.75
 half_lower, half_upper, half_thresh = 45, 150, 0.65
 whole_lower, whole_upper, whole_thresh = 45, 150, 0.60
 bars_lower, bars_upper, bars_thresh = 45, 150, 0.80
+doubles_lower, doubles_upper, doubles_thresh = 45, 150, 0.70
+croches_lower, croches_upper, croches_thresh = 45, 150, 0.70
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -178,6 +186,26 @@ if __name__ == "__main__":
     img_import = cv2.imread(img_file, 0)
     img_gray = filter_image(img_import, True)
     cv2.imwrite("gray.png", img_gray)
+
+    print("Matching doubles image...")
+    doubles_recs = locate_images(img_gray, doubles_imgs, doubles_lower, doubles_upper, doubles_thresh)
+
+    print("Merging doubles image results...")
+    doubles_recs = merge_recs([j for i in doubles_recs for j in i], 0.5)
+    doubles_recs_img = img.copy()
+    for r in doubles_recs:
+        r.draw(doubles_recs_img, (0, 0, 255), 2)
+    cv2.imwrite('doubles_recs_img.png', doubles_recs_img)
+
+    print("Matching croches image...")
+    croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh)
+
+    print("Merging croches image results...")
+    croches_recs = merge_recs([j for i in croches_recs for j in i], 0.5)
+    croches_recs_img = img.copy()
+    for r in doubles_recs:
+        r.draw(croches_recs_img, (0, 0, 255), 2)
+    cv2.imwrite('croches_recs_img.png', croches_recs_img)
 
     print("Matching sharp image...")
     sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
