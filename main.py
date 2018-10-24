@@ -34,7 +34,7 @@ whole_files = [
 bars_files = ["resources/template/measure.png",
 "resources/template/measure2.png"]
 
-#time 
+#time
 doubles_files = glob.glob("resources/template/doubles*.png")
 croches_files = glob.glob("resources/templaye/croches*.png")
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     # ret,img_gray = cv2.threshold(img_gray,127,255,cv2.THRESH_BINARY)
 
     img_gray = filter_image(img)
-    cv2.imwrite("gray.png", img_gray)
+    cv2.imwrite("output/gray.png", img_gray)
 
     img = cv2.imread(img_file, 0)
     img_gray_color = filter_image(img)
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     staff_recs_img = img.copy()
     for r in staff_recs:
         r.draw(staff_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('staff_recs_img.png', staff_recs_img)
+    cv2.imwrite('output/staff_recs_img.png', staff_recs_img)
     # open_file('staff_recs_img.png')
 
     print("Discovering staff locations...")
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     staff_boxes_img = img.copy()
     for r in staff_boxes:
         r.draw(staff_boxes_img, (0, 0, 255), 2)
-    cv2.imwrite('staff_boxes_img.png', staff_boxes_img)
+    cv2.imwrite('output/staff_boxes_img.png', staff_boxes_img)
     # open_file('staff_boxes_img.png')
 
     print("Discovering measuring bars image...")
@@ -181,11 +181,11 @@ if __name__ == "__main__":
     bars_recs_img = img.copy()
     for r in bars_recs:
         r.draw(bars_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('bars_measure_img.png', bars_recs_img)
+    cv2.imwrite('output/bars_measure_img.png', bars_recs_img)
 
     img_import = cv2.imread(img_file, 0)
     img_gray = filter_image(img_import, True)
-    cv2.imwrite("gray.png", img_gray)
+    cv2.imwrite("output/gray.png", img_gray)
 
     print("Matching doubles image...")
     doubles_recs = locate_images(img_gray, doubles_imgs, doubles_lower, doubles_upper, doubles_thresh)
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     doubles_recs_img = img.copy()
     for r in doubles_recs:
         r.draw(doubles_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('doubles_recs_img.png', doubles_recs_img)
+    cv2.imwrite('output/doubles_recs_img.png', doubles_recs_img)
 
     print("Matching croches image...")
     croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh)
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     croches_recs_img = img.copy()
     for r in doubles_recs:
         r.draw(croches_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('croches_recs_img.png', croches_recs_img)
+    cv2.imwrite('output/croches_recs_img.png', croches_recs_img)
 
     print("Matching sharp image...")
     sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     sharp_recs_img = img.copy()
     for r in sharp_recs:
         r.draw(sharp_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('sharp_recs_img.png', sharp_recs_img)
+    cv2.imwrite('output/sharp_recs_img.png', sharp_recs_img)
     # open_file('sharp_recs_img.png')
 
     print("Matching flat image...")
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     flat_recs_img = img.copy()
     for r in flat_recs:
         r.draw(flat_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('flat_recs_img.png', flat_recs_img)
+    cv2.imwrite('output/flat_recs_img.png', flat_recs_img)
     # open_file('flat_recs_img.png')
 
     print("Matching quarter image...")
@@ -239,7 +239,7 @@ if __name__ == "__main__":
         quarter_recs_img = img.copy()
         for r in quarter_recs:
             r.draw(quarter_recs_img, (0, 0, 255), 2)
-        cv2.imwrite('quarter_recs_img.png', quarter_recs_img)
+        cv2.imwrite('output/quarter_recs_img.png', quarter_recs_img)
     # open_file('quarter_recs_img.png')
 
     print("Matching half image...")
@@ -250,7 +250,7 @@ if __name__ == "__main__":
     half_recs_img = img.copy()
     for r in half_recs:
         r.draw(half_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('half_recs_img.png', half_recs_img)
+    cv2.imwrite('output/half_recs_img.png', half_recs_img)
     # open_file('half_recs_img.png')
 
     print("Matching whole image...")
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     whole_recs_img = img.copy()
     for r in whole_recs:
         r.draw(whole_recs_img, (0, 0, 255), 2)
-    cv2.imwrite('whole_recs_img.png', whole_recs_img)
+    cv2.imwrite('output/whole_recs_img.png', whole_recs_img)
     #open_file('whole_recs_img.png')
 
     note_groups = []
@@ -325,8 +325,8 @@ if __name__ == "__main__":
     for r in flat_recs:
         r.draw(img, (0, 0, 255), 1)
 
-    cv2.imwrite('res.png', img)
-    open_file('res.png')
+    cv2.imwrite('output/res.png', img)
+    open_file('output/res.png')
 
     for note_group in note_groups:
         print([ note.note + " " + note.sym for note in note_group])
@@ -357,7 +357,7 @@ if __name__ == "__main__":
 
     midi.addNote(track,channel,pitch,time,4,0)
     # And write it to disk.
-    binfile = open("output.mid", 'wb')
+    binfile = open("output/output.mid", 'wb')
     midi.writeFile(binfile)
     binfile.close()
     # open_file('output.mid')
