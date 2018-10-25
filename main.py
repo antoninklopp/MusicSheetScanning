@@ -118,8 +118,7 @@ def filter_image(img, filter_gaussian=False):
 
     return img
 
-if __name__ == "__main__":
-    img_file = sys.argv[1:][0]
+def recognize_one_image(img_file):
     img = cv2.imread(img_file, 0)
     # img_gray = img#cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # img = cv2.cvtColor(img_gray,cv2.COLOR_GRAY2RGB)
@@ -311,8 +310,7 @@ if __name__ == "__main__":
     for r in flat_recs:
         r.draw(img, (0, 0, 255), 1)
 
-    cv2.imwrite('output/res.png', img)
-    open_file('output/res.png')
+    cv2.imwrite("output/" + img_file.split("/")[-1][:-3] + "-output-.png", img)
 
     for note_group in note_groups:
         print([ note.note + " " + note.sym for note in note_group])
@@ -345,3 +343,9 @@ if __name__ == "__main__":
     midi.writeFile(binfile)
     binfile.close()
     # open_file('output.mid')
+
+if __name__ == "__main__":
+    img_file = sys.argv[1:][0]
+    for f in glob.glob(img_file + "*.png"):
+        print("current_file", f)
+        recognize_one_image(f)
