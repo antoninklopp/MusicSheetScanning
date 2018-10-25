@@ -34,7 +34,10 @@ class Rectangle(object):
         size = ((int)(self.x + self.w), (int)(self.y + self.h))
         cv2.rectangle(img, pos, size, color, thickness)
 
-    def contains_in_x(self, other):
-        if (self.y < other.y) and (other.y + other.w < self.y + self.w):
+    def contains_in_x(self, other, dilatation=0):
+        if (self.x - dilatation < other.x) and (other.x + other.w < self.x + self.w + dilatatio):
             return True
         return False
+
+    def __str__(self):
+        return "x : " + str(self.x) + " y : " + str(self.y) + " w : " + str(self.w) + " h : " + str(self.h)
