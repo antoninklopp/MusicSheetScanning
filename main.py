@@ -273,11 +273,11 @@ def recognize_one_image(img_file):
             for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
         staff_flats = [Note(r, "flat", box)
             for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        quarter_notes = [Note(r, "4", box, staff_sharps, staff_flats)
+        quarter_notes = [Note(r, 4, box, staff_sharps, staff_flats)
             for r in quarter_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        half_notes = [Note(r, "2", box, staff_sharps, staff_flats)
+        half_notes = [Note(r, 2, box, staff_sharps, staff_flats)
             for r in half_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-        whole_notes = [Note(r, "1", box, staff_sharps, staff_flats)
+        whole_notes = [Note(r, 1, box, staff_sharps, staff_flats)
             for r in whole_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
 
         staff_notes = quarter_notes + half_notes + whole_notes
@@ -285,15 +285,17 @@ def recognize_one_image(img_file):
         staffs = [r for r in staff_recs if r.overlap(box) > 0]
         staffs.sort(key=lambda r: r.x)
 
-        for t in doubles_recs:
-            for q in quarter_notes:
-                if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
-                    q.sym = "16"
-
+        # Comme certaines doubles peuvent aussi être des croches, on passe d'abord sur les croches
+        # puis on pourra potentiellement override avec des doubles. 
         for t in croches_recs:
             for q in quarter_notes:
                 if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
-                    q.sym = "8"
+                    q.sym = 8
+
+        for t in doubles_recs:
+            for q in quarter_notes:
+                if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
+                    q.sym = 16
 
         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
         note_group = []
@@ -301,6 +303,9 @@ def recognize_one_image(img_file):
         note_int = 0
         for i in range(len(staff_notes)):
             staff_notes[i].rec.draw(img, staff_notes[i].get_color(), 1)
+
+    for bar in bars_recs:
+        bar.draw(img, (0, 0, 255), 1)
 
     for r in staff_boxes:
         r.draw(img, (0, 0, 255), 1)
@@ -326,13 +331,7 @@ def recognize_one_image(img_file):
     midi.addTempo(track, time, 140)
 
     for note in staff_notes:
-        note_type = note.sym
-        if note_type == "1":
-            duration = 4
-        elif note_type == "2":
-            duration = 2
-        elif note_type == "4,8":
-            duration = 1 if len(note_group) == 1 else 0.5
+        duration = 4.0/note.sym
         pitch = note.pitch
         midi.addNote(track,channel,pitch,time,duration,volume)
         time += duration
@@ -346,6 +345,6 @@ def recognize_one_image(img_file):
 
 if __name__ == "__main__":
     img_file = sys.argv[1:][0]
-    for f in glob.glob(img_file + "*.png"):
+    for f in sorted(glob.glob(img_file + "*.png")):
         print("current_file", f)
         recognize_one_image(f)

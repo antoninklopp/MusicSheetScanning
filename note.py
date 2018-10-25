@@ -55,13 +55,13 @@ class Note(object):
         self.initialized = True
 
     def get_color(self):
-        if self.sym == "1":
+        if self.sym == 1:
             return (255, 0, 0)
-        elif self.sym == "2":
+        elif self.sym == 2:
             return (0, 255, 0)
-        elif self.sym == "4":
+        elif self.sym == 4:
             return (0, 0, 255)
-        elif self.sym == "8":
+        elif self.sym == 8:
             return (0, 255, 255)
-        elif self.sym == "16":
+        elif self.sym == 16:
             return (255, 0, 255)
