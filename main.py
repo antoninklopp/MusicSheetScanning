@@ -302,27 +302,6 @@ if __name__ == "__main__":
         note_int = 0
         for i in range(len(staff_notes)):
             staff_notes[i].rec.draw(img, staff_notes[i].get_color(), 1)
-        # while(i < len(staff_notes) and j < len(staffs)):
-        #     if (staff_notes[i].initialized is False):
-        #         print("ERROR")
-        #         if (i < len(staff_notes)):
-        #             i += 1
-        #         else:
-        #             j += 1
-        #         continue
-        #     if (staff_notes[i].rec.x > staffs[j].x and j < len(staffs)):
-        #         r = staffs[j]
-        #         j += 1;
-        #         if len(note_group) > 0:
-        #             note_groups.append(note_group)
-        #             note_group = []
-        #         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
-        #     else:
-        #         note_int += 1
-        #         note_group.append(staff_notes[i])
-        #         staff_notes[i].rec.draw(img, note_color, 2)
-        #         i += 1
-        # note_groups.append(note_group)
 
     for r in staff_boxes:
         r.draw(img, (0, 0, 255), 1)
@@ -348,19 +327,17 @@ if __name__ == "__main__":
     midi.addTrackName(track, time, "Track")
     midi.addTempo(track, time, 140)
 
-    for note_group in note_groups:
-        duration = None
-        for note in note_group:
-            note_type = note.sym
-            if note_type == "1":
-                duration = 4
-            elif note_type == "2":
-                duration = 2
-            elif note_type == "4,8":
-                duration = 1 if len(note_group) == 1 else 0.5
-            pitch = note.pitch
-            midi.addNote(track,channel,pitch,time,duration,volume)
-            time += duration
+    for note in staff_notes:
+        note_type = note.sym
+        if note_type == "1":
+            duration = 4
+        elif note_type == "2":
+            duration = 2
+        elif note_type == "4,8":
+            duration = 1 if len(note_group) == 1 else 0.5
+        pitch = note.pitch
+        midi.addNote(track,channel,pitch,time,duration,volume)
+        time += duration
 
     midi.addNote(track,channel,pitch,time,4,0)
     # And write it to disk.

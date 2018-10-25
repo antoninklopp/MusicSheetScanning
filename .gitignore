@@ -89,7 +89,8 @@ ENV/
 .ropeproject
 
 Images/
-*.png
+output/
+resources/template/created/*
 *.mid
 *.pdf
 *.jpg
