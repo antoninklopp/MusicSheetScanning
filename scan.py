@@ -93,11 +93,28 @@ def open_file(path):
     cmd = {'linux':'eog', 'win32':'explorer', 'darwin':'open'}[sys.platform]
     subprocess.run([cmd, path])
 
-def filter_image(img):
+def filter_image_horizontal(img):
     
-    kernel = np.array([[-1, -1, -1],
-    [0, 0, 0],
-    [1, 1, 1]])
+    kernel = np.array([[-1] * 3,
+    [0] * 3,
+    [1] * 3])
+    img = cv2.filter2D(img,-1,kernel)
+
+    return img
+
+def filter_image_vertical(img):
+    
+    kernel = np.array([[-1, 0, 1],
+    [-1, 0, 1],
+    [-1, 0, 1]])
+    img = cv2.filter2D(img,-1,kernel)
+
+    return img
+
+def gaussian(img):
+    kernel = np.array([[0, 0.25, 0],
+    [0.25, 0, 0.25],
+    [0, 0.25, 0]])
     img = cv2.filter2D(img,-1,kernel)
 
     return img
