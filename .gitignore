@@ -94,3 +94,4 @@ resources/template/created/*
 *.mid
 *.pdf
 *.jpg
+.vscode/
