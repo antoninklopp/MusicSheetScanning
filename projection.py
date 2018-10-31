@@ -118,8 +118,22 @@ def process_patches(img, staffs, img_output):
                     for i in range(staff_begin - 2, staff_end+3):
                         # print("ERASE")
                         img[i + begin_x, begin_y + j] = 255
-    cv2.imwrite("Cleaned.png", img)
+                        patch[i, j] = 255
+
+        # patch is now cleaned, we can do the recognition on it
+        # TODO : implement the patch by patch recognition
+        
     print("correct staff number", (correct_staff/all_staff) * 100 , "%")
+    return img
+
+def get_cleaned_sheet(img_file):
+    """
+    Get the sheet without the staffs
+    """
+    img = cv2.imread(img_file, 0)
+    img_with_staffs = cv2.imread(img_file)
+    staffs = get_staffs(img)
+    return process_patches(img, staffs, img_with_staffs)
 
 staffs = get_staffs(img)
 process_patches(img, staffs, cv2.imread(img_file))

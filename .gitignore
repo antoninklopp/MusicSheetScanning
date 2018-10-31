@@ -95,3 +95,4 @@ resources/template/created/*
 *.pdf
 *.jpg
 .vscode/
+*.png
