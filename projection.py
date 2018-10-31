@@ -37,12 +37,89 @@ def get_staffs(img):
                 current_beginning = i
                 in_peak = True
 
-    print("len place", len(staffs))
-    print("place", staffs)
+    # print("len place", len(staffs))
+    # print("place", staffs)
 
     plt.plot(range(0,img.shape[0]), histogram)
-    plt.show()
-
+    # plt.show()
+    print( "Found staffs")
     return staffs
 
+def create_patches(img, staffs):
+    """
+    Create patches where the images will be given 
+    """
+    length_image = img.shape[1]
+    patch_number = 10
+    for beginning_staff, end_staff in staffs:
+        for i in range(0, length_image, int(length_image/patch_number)):
+            current_patch = img[beginning_staff - int((end_staff-beginning_staff)/2):end_staff + int((end_staff-beginning_staff)/2), \
+            i:i + int(length_image/patch_number)]
+            yield current_patch, beginning_staff - int((end_staff-beginning_staff)/2),end_staff + int((end_staff-beginning_staff)/2), \
+            i, i + int(length_image/patch_number)
+
+def staffs_precise(img):
+    histogram = np.zeros((img.shape[0]))
+
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            histogram[i] += (255 - img[i, j])/255
+
+    max_heights = np.max(histogram)
+
+    number_staffs = 0
+
+    for i in range(histogram.shape[0]):
+        if histogram[i] > max_heights/1.2:
+            histogram[i] = max_heights
+            if (histogram[i-1]) == 0:
+                number_staffs += 1
+        else:
+            histogram[i] = 0
+
+    staffs = []
+    current_beginning = 0
+    in_peak = False
+    for i in range(histogram.shape[0]):
+        if histogram[i] == 0 and (in_peak is True):
+            staffs.append([current_beginning, i])
+            in_peak = False
+        if histogram[i] == max_heights and (in_peak is False):
+            current_beginning = i
+            in_peak = True
+    
+    if number_staffs != 5:
+        print("Strange number of staffsn seems to be", number_staffs, "here")
+    
+    if number_staffs != len(staffs):
+        print("Incoherent number of staffs", number_staffs, len(staffs))
+
+    return staffs, number_staffs == 5
+
+def process_patches(img, staffs, img_output):
+    correct_staff = 0
+    all_staff = 0
+    for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs):
+        cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
+        staffs_pre, correct = staffs_precise(patch)
+        if correct is True:
+            correct_staff += 1
+        all_staff += 1
+        for i, (staff_begin, staff_end) in enumerate(staffs_pre):
+            print("staffs", i, staff_begin, staff_end)
+            for j in range(patch.shape[1]):
+                for i in range(staff_begin, staff_end + 1):
+                    img_output[i + begin_x, begin_y + j] = [255, 0, 0]
+                if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
+                    or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
+                    # print("Here a note")
+                    pass
+                else:
+                    for i in range(staff_begin - 2, staff_end+3):
+                        # print("ERASE")
+                        img[i + begin_x, begin_y + j] = 255
+    cv2.imwrite("Cleaned.png", img)
+    print("correct staff number", (correct_staff/all_staff) * 100 , "%")
+
 staffs = get_staffs(img)
+process_patches(img, staffs, cv2.imread(img_file))
