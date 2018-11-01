@@ -115,13 +115,14 @@ def process_patches(img, staffs, img_output):
                     # print("Here a note")
                     pass
                 else:
-                    for i in range(staff_begin - 2, staff_end+3):
+                    for i in range(staff_begin - 1, staff_end+2):
                         # print("ERASE")
                         img[i + begin_x, begin_y + j] = 255
                         patch[i, j] = 255
 
         # patch is now cleaned, we can do the recognition on it
         # TODO : implement the patch by patch recognition
+        
         
     print("correct staff number", (correct_staff/all_staff) * 100 , "%")
     return img

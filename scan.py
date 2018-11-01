@@ -323,7 +323,7 @@ def recognize_one_image(img_file):
 
         note_color = (randint(0, 255), randint(0, 255), randint(0, 255))
         note_group = []
-        i = 0; j = 0;
+        i = 0; j = 0
         note_int = 0
         for i in range(len(staff_notes)):
             staff_notes[i].rec.draw(img, staff_notes[i].get_color(), 1)
