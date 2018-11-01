@@ -366,3 +366,76 @@ def recognize_one_image(img_file):
     midi.writeFile(binfile)
     binfile.close()
     # open_file('output.mid')
+
+
+def scan_one_patch(img_gray, staffs):
+
+    print("Matching flat image...")
+    flat_recs = locate_images(img_gray, flat_imgs, flat_lower, flat_upper, flat_thresh)
+
+    print("Merging doubles image results...")
+    flat_recs = merge_recs([j for i in flat_recs for j in i], 0.5)
+
+    print("Matching doubles image...")
+    doubles_recs = locate_images(img_gray, doubles_imgs, doubles_lower, doubles_upper, doubles_thresh)
+
+    print("Merging doubles image results...")
+    doubles_recs = merge_recs([j for i in doubles_recs for j in i], 0.5)
+
+    print("Matching croches image...")
+    croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh)
+
+    print("Merging croches image results...")
+    croches_recs = merge_recs([j for i in croches_recs for j in i], 0.5)
+
+    print("Matching sharp image...")
+    sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
+
+    print("Merging sharp image results...")
+    sharp_recs = merge_recs([j for i in sharp_recs for j in i], 0.5)
+
+    print("Matching quarter image...")
+    for quarter in quarter_files:
+        quater_imgs = [cv2.imread(quarter, 0)]
+        quarter_recs = locate_images(img_gray, quarter_imgs, quarter_lower, quarter_upper, quarter_thresh)
+
+        print("Merging quarter image results...")
+        quarter_recs = merge_recs([j for i in quarter_recs for j in i], 0.5)
+        quarter_recs_img = img.copy()
+
+    print("Matching half image...")
+    half_recs = locate_images(img_gray, half_imgs, half_lower, half_upper, half_thresh)
+
+    print("Merging half image results...")
+    half_recs = merge_recs([j for i in half_recs for j in i], 0.5)
+
+    print("Matching whole image...")
+    whole_recs = locate_images(img_gray, whole_imgs, whole_lower, whole_upper, whole_thresh)
+
+    print("Merging whole image results...")
+    whole_recs = merge_recs([j for i in whole_recs for j in i], 0.5)
+
+    # staff_sharps = [Note(r, "sharp", box)
+    #     for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
+    # staff_flats = [Note(r, "flat", box)
+    #     for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
+    quarter_notes = [Note(r, 4, staffs)]
+    half_notes = [Note(r, 2, staffs)]
+    whole_notes = [Note(r, 1, staffs)]
+
+    # Comme certaines doubles peuvent aussi etre des croches, on passe d'abord sur les croches
+    # puis on pourra potentiellement override avec des doubles. 
+    for t in croches_recs:
+        for q in quarter_notes:
+            if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
+                q.sym = 8
+
+    for t in doubles_recs:
+        for q in quarter_notes:
+            if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
+                q.sym = 16
+
+    staff_notes = quarter_notes + half_notes + whole_notes
+    staff_notes.sort(key=lambda n: n.rec.x)
+
+    return staff_notes
