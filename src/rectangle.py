@@ -3,10 +3,10 @@ import math
 
 class Rectangle(object):
     def __init__(self, x, y, w, h, scale=1):
-        self.x = x;
-        self.y = y;
-        self.w = w;
-        self.h = h;
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
         self.middle = self.x + self.w/2, self.y + self.h/2
         self.area = self.w * self.h
         self.scale = scale
