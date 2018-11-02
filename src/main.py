@@ -1,4 +1,4 @@
-from scan import *
+from src.scan import *
 
 if __name__ == "__main__":
     img_file = sys.argv[1:][0]

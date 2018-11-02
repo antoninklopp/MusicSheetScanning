@@ -1,4 +1,4 @@
-from rectangle import Rectangle
+from src.rectangle import Rectangle
 import cv2
 import numpy as np
 

@@ -1,8 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
-from scan import threshold_image
+from src.scan import threshold_image, scan_one_patch
 import numpy as np
-from scan import scan_one_patch
 
 img_file = "Images/sonate-1.png"
 
@@ -46,12 +45,11 @@ def get_staffs(img):
     print( "Found staffs")
     return staffs
 
-def create_patches(img, staffs):
+def create_patches(img, staffs, patch_number = 3):
     """
     Create patches where the images will be given 
     """
     length_image = img.shape[1]
-    patch_number = 3
     for beginning_staff, end_staff in staffs:
         for i in range(0, length_image, int(length_image/patch_number)):
             current_patch = img[beginning_staff - int((end_staff-beginning_staff)/2):end_staff + int((end_staff-beginning_staff)/2), \
@@ -124,7 +122,8 @@ def process_patches(img, staffs, img_output):
     correct_staff = 0
     all_staff = 0
     medium_staff = [0, [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
-    with open("output_notes.txt", "w") as sheet:
+    all_notes = []
+    with open("output/output_notes.txt", "w") as sheet:
         for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs):
             cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
             staffs_pre, correct = staffs_precise(patch, medium_staff)
@@ -152,6 +151,7 @@ def process_patches(img, staffs, img_output):
             # patch is now cleaned, we can do the recognition on it
             # TODO : implement the patch by patch recognition
             notes = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
+            all_notes += notes
             for n in notes:
                 cv2.rectangle(img_output, (int(n.rec.x + begin_y), int(n.rec.y + begin_x)), \
                 (int(n.rec.x + n.rec.w + begin_y), int(n.rec.y + n.rec.h + begin_x)), n.get_color())
@@ -159,7 +159,7 @@ def process_patches(img, staffs, img_output):
             
     cv2.imwrite("output/output_projection.png", img_output)
     print("correct staff number", (correct_staff/all_staff) * 100 , "%")
-    return img
+    return all_notes
 
 def get_cleaned_sheet(img_file):
     """
@@ -170,5 +170,6 @@ def get_cleaned_sheet(img_file):
     staffs = get_staffs(img)
     return process_patches(img, staffs, img_with_staffs)
 
-staffs = get_staffs(img)
-process_patches(img, staffs, cv2.imread(img_file))
+if __name__ == "__main__":
+    staffs = get_staffs(img)
+    process_patches(img, staffs, cv2.imread(img_file))

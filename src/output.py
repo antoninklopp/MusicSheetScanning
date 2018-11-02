@@ -1,2 +1,2 @@
 def output():
-    
+    pass

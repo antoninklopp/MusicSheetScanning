@@ -3,9 +3,9 @@ import subprocess
 import cv2
 import time
 import numpy as np
-from best_fit import fit
-from rectangle import Rectangle
-from note import Note
+from src.best_fit import fit
+from src.rectangle import Rectangle
+from src.note import Note
 from random import randint
 from midiutil.MidiFile import MIDIFile
 import glob
@@ -104,6 +104,9 @@ def filter_image_horizontal(img):
     return img
 
 def filter_image_vertical(img):
+    """
+    Vertical filter for an image
+    """
     
     kernel = np.array([[-1, 0, 1],
     [-1, 0, 1],
@@ -113,6 +116,9 @@ def filter_image_vertical(img):
     return img
 
 def gaussian(img):
+    """
+    Adapted gaussian filter for image
+    """
     kernel = np.array([[0, 0.25, 0],
     [0.25, 0, 0.25],
     [0, 0.25, 0]])
