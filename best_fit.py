@@ -19,10 +19,13 @@ def fit(img, templates, start_percent, stop_percent, threshold):
         for template in templates:
             template = cv2.resize(template, None,
                 fx = scale, fy = scale, interpolation = cv2.INTER_CUBIC)
-            result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
-            result = np.where(result >= threshold)
-            location_count += len(result[0])
-            locations += [result]
+            try:
+                result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
+                result = np.where(result >= threshold)
+                location_count += len(result[0])
+                locations += [result]
+            except:
+                continue
         print("scale: {0}, hits: {1}".format(scale, location_count))
         x.append(location_count)
         y.append(scale)

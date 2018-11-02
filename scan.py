@@ -48,15 +48,15 @@ bars_imgs = [cv2.imread(bars_file, 0) for bars_file in bars_files]
 doubles_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
 croches_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
 
-staff_lower, staff_upper, staff_thresh = 45, 150, 0.65
-sharp_lower, sharp_upper, sharp_thresh = 45, 150, 0.65
-flat_lower, flat_upper, flat_thresh = 45, 150, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 45, 150, 0.75
-half_lower, half_upper, half_thresh = 45, 150, 0.65
-whole_lower, whole_upper, whole_thresh = 45, 150, 0.60
-bars_lower, bars_upper, bars_thresh = 45, 150, 0.80
-doubles_lower, doubles_upper, doubles_thresh = 45, 150, 0.65
-croches_lower, croches_upper, croches_thresh = 45, 150, 0.65
+staff_lower, staff_upper, staff_thresh = 45, 100, 0.65
+sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
+flat_lower, flat_upper, flat_thresh = 45, 100, 0.70
+quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.75
+half_lower, half_upper, half_thresh = 45, 100, 0.65
+whole_lower, whole_upper, whole_thresh = 45, 100, 0.60
+bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
+doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.65
+croches_lower, croches_upper, croches_thresh = 45, 100, 0.65
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -66,7 +66,8 @@ def locate_images(img, templates, start, stop, threshold):
         w, h = templates[i].shape[::-1]
         w *= scale
         h *= scale
-        img_locations.append([Rectangle(pt[0], pt[1], w, h, scale) for pt in zip(*locations[i][::-1])])
+        if locations and locations[i]:
+            img_locations.append([Rectangle(pt[0], pt[1], w, h, scale) for pt in zip(*locations[i][::-1])])
     return img_locations
 
 def merge_recs(recs, threshold):
@@ -401,7 +402,6 @@ def scan_one_patch(img_gray, staffs):
 
         print("Merging quarter image results...")
         quarter_recs = merge_recs([j for i in quarter_recs for j in i], 0.5)
-        quarter_recs_img = img.copy()
 
     print("Matching half image...")
     half_recs = locate_images(img_gray, half_imgs, half_lower, half_upper, half_thresh)
@@ -419,20 +419,36 @@ def scan_one_patch(img_gray, staffs):
     #     for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
     # staff_flats = [Note(r, "flat", box)
     #     for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-    quarter_notes = [Note(r, 4, staffs)]
-    half_notes = [Note(r, 2, staffs)]
-    whole_notes = [Note(r, 1, staffs)]
+    quarter_notes = [Note(r, 4, staffs) for r in quarter_recs]
+    half_notes = [Note(r, 2, staffs) for r in half_recs]
+    whole_notes = [Note(r, 1, staffs) for r in whole_recs]
+
+    sorted_notes = sorted(quarter_notes + half_notes + whole_notes, key=lambda x:x.rec.x)
+
+    # Find the sharp notes
+    for sharp in sharp_recs:
+        for note in sorted_notes:
+            if note.rec.x > sharp.middle[0]:
+                note.set_as_sharp()
+                break
+
+    # Find the flat notes
+    for flat in flat_recs:
+        for note in sorted_notes:
+            if note.rec.x > flat.middle[0]:
+                note.set_as_flat()
+                break
 
     # Comme certaines doubles peuvent aussi etre des croches, on passe d'abord sur les croches
     # puis on pourra potentiellement override avec des doubles. 
     for t in croches_recs:
         for q in quarter_notes:
-            if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
+            if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
                 q.sym = 8
 
     for t in doubles_recs:
         for q in quarter_notes:
-            if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
+            if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
                 q.sym = 16
 
     staff_notes = quarter_notes + half_notes + whole_notes

@@ -2,6 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 from scan import threshold_image
 import numpy as np
+from scan import scan_one_patch
 
 img_file = "Images/sonate-1.png"
 
@@ -99,30 +100,33 @@ def staffs_precise(img):
 def process_patches(img, staffs, img_output):
     correct_staff = 0
     all_staff = 0
-    for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs):
-        cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
-        staffs_pre, correct = staffs_precise(patch)
-        if correct is True:
-            correct_staff += 1
-        all_staff += 1
-        for i, (staff_begin, staff_end) in enumerate(staffs_pre):
-            print("staffs", i, staff_begin, staff_end)
-            for j in range(patch.shape[1]):
-                for i in range(staff_begin, staff_end + 1):
-                    img_output[i + begin_x, begin_y + j] = [255, 0, 0]
-                if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
-                    or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
-                    # print("Here a note")
-                    pass
-                else:
-                    for i in range(staff_begin - 1, staff_end+2):
-                        # print("ERASE")
-                        img[i + begin_x, begin_y + j] = 255
-                        patch[i, j] = 255
+    with open("output_notes.txt", "w") as sheet:
+        for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs):
+            cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
+            staffs_pre, correct = staffs_precise(patch)
+            if correct is True:
+                correct_staff += 1
+            all_staff += 1
+            for i, (staff_begin, staff_end) in enumerate(staffs_pre):
+                print("staffs", i, staff_begin, staff_end)
+                for j in range(patch.shape[1]):
+                    for i in range(staff_begin, staff_end + 1):
+                        img_output[i + begin_x, begin_y + j] = [255, 0, 0]
+                    if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
+                        or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
+                        # print("Here a note")
+                        pass
+                    else:
+                        for i in range(staff_begin - 1, staff_end+2):
+                            # print("ERASE")
+                            img[i + begin_x, begin_y + j] = 255
+                            patch[i, j] = 255
 
-        # patch is now cleaned, we can do the recognition on it
-        # TODO : implement the patch by patch recognition
-        
+            # patch is now cleaned, we can do the recognition on it
+            # TODO : implement the patch by patch recognition
+            notes = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
+            for n in notes:
+                sheet.write(n.__str__() + "\n")
         
     print("correct staff number", (correct_staff/all_staff) * 100 , "%")
     return img
