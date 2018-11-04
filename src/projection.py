@@ -30,11 +30,9 @@ def get_staffs(img):
     for i in range(histogram.shape[0]):
         if histogram[i] == 0 and (in_peak is True):
             if np.sum(histogram[i:i+20]) == 0:
-                print("Found End")
                 staffs.append([current_beginning, i])
                 in_peak = False
         if histogram[i] == max_heights and (in_peak is False):
-            print("Found beginning")
             current_beginning = i
             in_peak = True
 
@@ -47,13 +45,12 @@ def create_patches(img, staffs, patch_number = 3):
     """
     Create patches where the images will be given 
     """
-    print("patch number", patch_number)
     length_image = img.shape[1]
     for beginning_staff, end_staff in staffs:
         for i in range(0, length_image, int(length_image/patch_number)):
-            current_patch = img[max(0, beginning_staff - int((end_staff-beginning_staff)/2)):min(length_image, end_staff + int((end_staff-beginning_staff)/2)), \
+            current_patch = img[max(0, beginning_staff - int((end_staff-beginning_staff))):min(length_image, end_staff + int((end_staff-beginning_staff))), \
             i:i + int(length_image/patch_number)]
-            yield current_patch, max(0, beginning_staff - int((end_staff-beginning_staff)/2)), min(length_image, end_staff + int((end_staff-beginning_staff)/2)), \
+            yield current_patch, max(0, beginning_staff - int((end_staff-beginning_staff))), min(length_image, end_staff + int((end_staff-beginning_staff))), \
             i, i + int(length_image/patch_number)
 
 def staffs_precise(img, medium_staff):

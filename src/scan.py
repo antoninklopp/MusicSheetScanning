@@ -127,9 +127,9 @@ def gaussian(img):
     return img
 
 def threshold_image(img, thresh=200):
-    print(np.min(img))
-    print(np.max(img))
-
+    """
+    Threshold the image to get a black and white image
+    """
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
             if img[i, j] < thresh:
@@ -140,6 +140,11 @@ def threshold_image(img, thresh=200):
     return img
 
 def inverse_image(img):
+    """
+    Inverse the image
+    Black becomes white
+    White becomes black
+    """
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
             if img[i, j] == 255:

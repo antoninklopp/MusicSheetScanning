@@ -4,7 +4,7 @@ import numpy as np
 
 note_step = 0.0625
 
-note_names = ["e", "f", "g", "a", "b", "c", "d"]
+note_names = ["g", "f", "e", "d", "c", "b", "a"]
 
 class Note(object):
 
@@ -31,28 +31,41 @@ class Note(object):
         height = []
         for i in range(1, len(staffs)):
             height.append(staffs[i] - staffs[i-1])
+
         medium_height = sum(height)/4
 
+        # WARNING : staff are on reverse order, the first is the above one, last is the below one (because of image coordinates, 
+        # start in upper left corner)
+        # if the note is above the last staff
+        if self.middle < staffs[0] - medium_height/4:
+            print(staffs)
+            print(self.middle)
+            self.note = self.find_note((self.middle - staffs[0]) / (medium_height/2.0) + 1)
         # if the note is below the first staff
-        if self.middle > staffs[0]:
-            self.note = self.find_note((staffs[0] - self.middle) / medium_height)
-        elif self.middle < staffs[-1]:
-            self.note = self.find_note((staffs[4] - self.middle) / medium_height + 9) # We add nine to compensate the beginning note
+        elif self.middle > staffs[-1] + medium_height/4:
+            self.note = self.find_note((self.middle - staffs[-1]) / (medium_height/2.0) + 9) # We add nine to compensate the beginning note
         else:
             for i, h in enumerate(staffs):
-                if (self.middle - h) < medium_height/3:
-                    self.note = self.find_note(h * 2)
-                elif (i != 4) and (self.middle - (h + staffs[i+1])/2) < medium_height/3:
-                    self.note = self.find_note(h*2 + 1)
+                if (self.middle - h) < medium_height/4:
+                    self.note = self.find_note(i * 2 + 1)
+                    break
+                elif (i != 4) and abs(self.middle - (h + staffs[i+1])/2) < medium_height/4:
+                    self.note = self.find_note(i * 2 + 2)
+                    break
 
     def find_note(self, note_int):
         """
         Find the stringified note corresponding to a given integer
+        Our starting point note is g5
         """
-        note_int = int(note_int)
+        print("note before round", note_int)
+        note_int = int(round(note_int))
+        print("note int", note_int)
         # note_int = 0 corresponds to e3
         note_name = note_names[note_int % 7]
-        note_height = note_int // 7 + 4
+        note_height = 5 - note_int // 7
+        if note_name == "a" or note_name == "b":
+            note_height -= 1
         self.note_name = note_name + str(note_height)
         return note_name + str(note_height)
 
