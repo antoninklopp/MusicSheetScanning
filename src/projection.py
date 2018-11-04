@@ -29,32 +29,31 @@ def get_staffs(img):
     in_peak = False
     for i in range(histogram.shape[0]):
         if histogram[i] == 0 and (in_peak is True):
-            if np.sum(histogram[i:i+10]) < max_heights * 2:
+            if np.sum(histogram[i:i+20]) == 0:
+                print("Found End")
                 staffs.append([current_beginning, i])
                 in_peak = False
         if histogram[i] == max_heights and (in_peak is False):
-            if np.sum(histogram[i:i+10]) > max_heights * 2:
-                current_beginning = i
-                in_peak = True
-
-    # print("len place", len(staffs))
-    # print("place", staffs)
+            print("Found beginning")
+            current_beginning = i
+            in_peak = True
 
     plt.plot(range(0,img.shape[0]), histogram)
     # plt.show()
-    print( "Found staffs")
+
     return staffs
 
 def create_patches(img, staffs, patch_number = 3):
     """
     Create patches where the images will be given 
     """
+    print("patch number", patch_number)
     length_image = img.shape[1]
     for beginning_staff, end_staff in staffs:
         for i in range(0, length_image, int(length_image/patch_number)):
-            current_patch = img[beginning_staff - int((end_staff-beginning_staff)/2):end_staff + int((end_staff-beginning_staff)/2), \
+            current_patch = img[max(0, beginning_staff - int((end_staff-beginning_staff)/2)):min(length_image, end_staff + int((end_staff-beginning_staff)/2)), \
             i:i + int(length_image/patch_number)]
-            yield current_patch, beginning_staff - int((end_staff-beginning_staff)/2),end_staff + int((end_staff-beginning_staff)/2), \
+            yield current_patch, max(0, beginning_staff - int((end_staff-beginning_staff)/2)), min(length_image, end_staff + int((end_staff-beginning_staff)/2)), \
             i, i + int(length_image/patch_number)
 
 def staffs_precise(img, medium_staff):
@@ -124,16 +123,15 @@ def process_patches(img, staffs, img_output):
     medium_staff = [0, [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
     all_notes = []
     with open("output/output_notes.txt", "w") as sheet:
-        for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs):
+        patch_number = img.shape[1]//400 + 1
+        for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs, patch_number=patch_number):
             cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
             staffs_pre, correct = staffs_precise(patch, medium_staff)
             all_staff += 1
             if correct is True:
                 correct_staff += 1
-                print("medium staff", staffs_pre, medium_staff[1:])
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
             for i, (staff_begin, staff_end) in enumerate(staffs_pre):
-                print("staffs", i, staff_begin, staff_end)
                 for j in range(patch.shape[1]):
                     for i in range(staff_begin, staff_end + 1):
                         img_output[i + begin_x, begin_y + j] = [255, 0, 0]

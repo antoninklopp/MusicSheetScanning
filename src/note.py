@@ -52,7 +52,7 @@ class Note(object):
         note_int = int(note_int)
         # note_int = 0 corresponds to e3
         note_name = note_names[note_int % 7]
-        note_height = note_int // 7 + 3
+        note_height = note_int // 7 + 4
         self.note_name = note_name + str(note_height)
         return note_name + str(note_height)
 

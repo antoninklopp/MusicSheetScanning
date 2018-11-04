@@ -66,7 +66,7 @@ def locate_images(img, templates, start, stop, threshold):
         w, h = templates[i].shape[::-1]
         w *= scale
         h *= scale
-        if locations and locations[i]:
+        if locations and i < len(locations) and locations[i]:
             img_locations.append([Rectangle(pt[0], pt[1], w, h, scale) for pt in zip(*locations[i][::-1])])
     return img_locations
 
@@ -376,49 +376,38 @@ def recognize_one_image(img_file):
 
 
 def scan_one_patch(img_gray, staffs):
+    """
+    Scanning one patch of the image
+    """
 
-    print("Matching flat image...")
     flat_recs = locate_images(img_gray, flat_imgs, flat_lower, flat_upper, flat_thresh)
 
-    print("Merging doubles image results...")
     flat_recs = merge_recs([j for i in flat_recs for j in i], 0.5)
 
-    print("Matching doubles image...")
     doubles_recs = locate_images(img_gray, doubles_imgs, doubles_lower, doubles_upper, doubles_thresh)
 
-    print("Merging doubles image results...")
     doubles_recs = merge_recs([j for i in doubles_recs for j in i], 0.5)
 
-    print("Matching croches image...")
     croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh)
 
-    print("Merging croches image results...")
     croches_recs = merge_recs([j for i in croches_recs for j in i], 0.5)
 
-    print("Matching sharp image...")
     sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
 
-    print("Merging sharp image results...")
     sharp_recs = merge_recs([j for i in sharp_recs for j in i], 0.5)
 
-    print("Matching quarter image...")
     for quarter in quarter_files:
         quater_imgs = [cv2.imread(quarter, 0)]
         quarter_recs = locate_images(img_gray, quarter_imgs, quarter_lower, quarter_upper, quarter_thresh)
 
-        print("Merging quarter image results...")
         quarter_recs = merge_recs([j for i in quarter_recs for j in i], 0.5)
 
-    print("Matching half image...")
     half_recs = locate_images(img_gray, half_imgs, half_lower, half_upper, half_thresh)
 
-    print("Merging half image results...")
     half_recs = merge_recs([j for i in half_recs for j in i], 0.5)
 
-    print("Matching whole image...")
     whole_recs = locate_images(img_gray, whole_imgs, whole_lower, whole_upper, whole_thresh)
 
-    print("Merging whole image results...")
     whole_recs = merge_recs([j for i in whole_recs for j in i], 0.5)
 
     # staff_sharps = [Note(r, "sharp", box)
