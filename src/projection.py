@@ -157,7 +157,7 @@ def process_patches(img, staffs, img_output):
                         # print("Here a note")
                         pass
                     else:
-                        for i in range(staff_begin - 1, staff_end+2):
+                        for i in range(staff_begin - 2, staff_end+3):
                             # print("ERASE")
                             img[i + begin_x, begin_y + j] = 255
                             patch[i, j] = 255
@@ -174,6 +174,7 @@ def process_patches(img, staffs, img_output):
                 sheet.write(n.__str__() + "\n")
             
     cv2.imwrite("output/output_projection.png", img_output)
+    cv2.imwrite("output/gray.png", img)
     print("correct staff number", (correct_staff/all_staff) * 100 , "%")
     return all_notes
 

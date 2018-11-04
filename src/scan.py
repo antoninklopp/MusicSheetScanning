@@ -10,33 +10,16 @@ from random import randint
 from midiutil.MidiFile import MIDIFile
 import glob
 
-staff_files = ["resources/template/staff4a.png",
-"resources/template/staff5a.png"]
-
-quarter_files = [
-    "resources/template/quarter.png",
-    "resources/template/solid-note.png"]
-sharp_files = [
-    "resources/template/sharp.png"]
-flat_files = [
-    "resources/template/flat-line.png",
-    "resources/template/flat-space.png" ]
-half_files = [
-    "resources/template/half-space.png",
-    "resources/template/half-note-line.png",
-    "resources/template/half-line.png",
-    "resources/template/half-note-space.png"]
-whole_files = [
-    "resources/template/whole-space.png",
-    "resources/template/whole-note-line.png",
-    "resources/template/whole-line.png",
-    "resources/template/whole-note-space.png"]
-bars_files = ["resources/template/measure.png",
-"resources/template/measure2.png"]
-
+staff_files = glob.glob("resources/template/staff/*.png")
+quarter_files = glob.glob("resources/template/quarter/*.png")
+sharp_files = glob.glob("resources/template/sharp/*.png")
+flat_files = glob.glob("resources/template/flat/*.png")
+half_files = glob.glob("resources/template/half/*.png")
+whole_files = glob.glob("resources/template/whole/*.png")
+bars_files = glob.glob("resources/template/measures/*.png")
 #time
-doubles_files = glob.glob("resources/template/doubles*.png")
-croches_files = glob.glob("resources/template/croches*.png")
+doubles_files = glob.glob("resources/template/doubles/*.png")
+croches_files = glob.glob("resources/template/croches/*.png")
 
 staff_imgs = [cv2.imread(staff_file, 0) for staff_file in staff_files]
 quarter_imgs = [cv2.imread(quarter_file, 0) for quarter_file in quarter_files]
