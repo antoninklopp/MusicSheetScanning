@@ -5,7 +5,7 @@ try:
 except ImportError:
     matplotlib.use('agg')
 import matplotlib.pyplot as plt
-from src.scan import threshold_image, scan_one_patch
+from src.scan import threshold_image, scan_one_patch, look_for_key
 import numpy as np
 
 img_file = "Images/sonate-1.png"
@@ -131,6 +131,9 @@ def staffs_precise(img, medium_staff):
     return staffs, len(staffs) == 5
 
 def process_patches(img, staffs, img_output):
+    """
+    Process all the patches and extract the notes
+    """
     correct_staff = 0
     all_staff = 0
     medium_staff = [0, [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
@@ -166,6 +169,7 @@ def process_patches(img, staffs, img_output):
 
             # patch is now cleaned, we can do the recognition on it
             # TODO : implement the patch by patch recognition
+            print(look_for_key(patch))
             notes = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
             all_notes += notes
             for n in notes:

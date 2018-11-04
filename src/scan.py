@@ -17,9 +17,13 @@ flat_files = glob.glob("resources/template/flat/*.png")
 half_files = glob.glob("resources/template/half/*.png")
 whole_files = glob.glob("resources/template/whole/*.png")
 bars_files = glob.glob("resources/template/measures/*.png")
+
 #time
 doubles_files = glob.glob("resources/template/doubles/*.png")
 croches_files = glob.glob("resources/template/croches/*.png")
+
+#keys
+key_files = glob.glob("resources/template/key/*.png")
 
 staff_imgs = [cv2.imread(staff_file, 0) for staff_file in staff_files]
 quarter_imgs = [cv2.imread(quarter_file, 0) for quarter_file in quarter_files]
@@ -30,6 +34,7 @@ whole_imgs = [cv2.imread(whole_file, 0) for whole_file in whole_files]
 bars_imgs = [cv2.imread(bars_file, 0) for bars_file in bars_files]
 doubles_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
 croches_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
+key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 
 staff_lower, staff_upper, staff_thresh = 45, 100, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
@@ -40,6 +45,7 @@ whole_lower, whole_upper, whole_thresh = 45, 100, 0.60
 bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
 doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.65
 croches_lower, croches_upper, croches_thresh = 45, 100, 0.65
+key_lower, key_upper, key_thresh = 45, 100, 0.65
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -362,6 +368,29 @@ def recognize_one_image(img_file):
     binfile.close()
     # open_file('output.mid')
 
+def look_for_key(img_gray):
+    """
+    Scanning for a key in the file
+    We check every patch in case the key changes
+    """
+    key_found = 0
+    current_key = None
+    for key in key_files:
+        print("looking for", key)
+        key_recs = locate_images(img_gray, [cv2.imread(key, 0)], key_lower, key_upper, key_thresh)
+        key_recs = merge_recs([j for i in key_recs for j in i], 0.5)
+        if key_recs:
+            key_found += 1
+            current_key = key.split("/")[-1][:-4]
+    
+    if key_found > 1:
+        print("More than one key found, strange")
+    else:
+        print("key found", current_key)
+
+    return current_key
+
+
 
 def scan_one_patch(img_gray, staffs):
     """
@@ -384,11 +413,9 @@ def scan_one_patch(img_gray, staffs):
 
     sharp_recs = merge_recs([j for i in sharp_recs for j in i], 0.5)
 
-    for quarter in quarter_files:
-        quater_imgs = [cv2.imread(quarter, 0)]
-        quarter_recs = locate_images(img_gray, quarter_imgs, quarter_lower, quarter_upper, quarter_thresh)
+    quarter_recs = locate_images(img_gray, quarter_imgs, quarter_lower, quarter_upper, quarter_thresh)
 
-        quarter_recs = merge_recs([j for i in quarter_recs for j in i], 0.5)
+    quarter_recs = merge_recs([j for i in quarter_recs for j in i], 0.5)
 
     half_recs = locate_images(img_gray, half_imgs, half_lower, half_upper, half_thresh)
 

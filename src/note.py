@@ -8,13 +8,13 @@ note_names = ["g", "f", "e", "d", "c", "b", "a"]
 
 class Note(object):
 
-    def __init__(self, rec, sym, staffs):
+    def __init__(self, rec, sym, staffs, key="g"):
         self.rec = rec
         self.sym = sym
 
         self.middle = rec.y + (rec.h / 2.0)
 
-        self.find_height(staffs)
+        self.find_height(staffs, key=key)
 
     def set_as_sharp(self):
         self.note += "#"
@@ -22,7 +22,7 @@ class Note(object):
     def set_as_flat(self):
         self.note += "b"
 
-    def find_height(self, staffs):
+    def find_height(self, staffs, key):
         """
         param : staffs : A list of the five staffs on the sheet, corresponding to their average height (number should be ints)
         TODO : Need to test this function
@@ -38,32 +38,36 @@ class Note(object):
         # start in upper left corner)
         # if the note is above the last staff
         if self.middle < staffs[0] - medium_height/4:
-            self.note = self.find_note((self.middle - staffs[0]) / (medium_height/2.0) + 1)
+            self.note = self.find_note((self.middle - staffs[0]) / (medium_height/2.0) + 1, key)
         # if the note is below the first staff
         elif self.middle > staffs[-1] + medium_height/4:
-            self.note = self.find_note((self.middle - staffs[-1]) / (medium_height/2.0) + 9) # We add nine to compensate the beginning note
+            self.note = self.find_note((self.middle - staffs[-1]) / (medium_height/2.0) + 9, key) # We add nine to compensate the beginning note
         else:
             for i, h in enumerate(staffs):
                 if (self.middle - h) < medium_height/4:
-                    self.note = self.find_note(i * 2 + 1)
+                    self.note = self.find_note(i * 2 + 1, key)
                     break
                 elif (i != 4) and abs(self.middle - (h + staffs[i+1])/2) < medium_height/4:
-                    self.note = self.find_note(i * 2 + 2)
+                    self.note = self.find_note(i * 2 + 2, key)
                     break
 
-    def find_note(self, note_int):
+    def find_note(self, note_int, key):
         """
         Find the stringified note corresponding to a given integer
         Our starting point note is g5
         """
-        note_int = int(round(note_int))
-        # note_int = 0 corresponds to e3
-        note_name = note_names[note_int % 7]
-        note_height = 5 - note_int // 7
-        if note_name == "a" or note_name == "b":
-            note_height -= 1
-        self.note_name = note_name + str(note_height)
-        return note_name + str(note_height)
+        if key == "g":
+            note_int = int(round(note_int))
+            # note_int = 0 corresponds to e3
+            note_name = note_names[note_int % 7]
+            note_height = 5 - note_int // 7
+            if note_name == "a" or note_name == "b":
+                note_height -= 1
+            self.note_name = note_name + str(note_height)
+            return note_name + str(note_height)
+        else:
+            print("Error, key unknown, not implemented")
+            return None
 
 
     def get_color(self):
