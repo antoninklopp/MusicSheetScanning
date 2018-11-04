@@ -38,8 +38,6 @@ class Note(object):
         # start in upper left corner)
         # if the note is above the last staff
         if self.middle < staffs[0] - medium_height/4:
-            print(staffs)
-            print(self.middle)
             self.note = self.find_note((self.middle - staffs[0]) / (medium_height/2.0) + 1)
         # if the note is below the first staff
         elif self.middle > staffs[-1] + medium_height/4:
@@ -58,9 +56,7 @@ class Note(object):
         Find the stringified note corresponding to a given integer
         Our starting point note is g5
         """
-        print("note before round", note_int)
         note_int = int(round(note_int))
-        print("note int", note_int)
         # note_int = 0 corresponds to e3
         note_name = note_names[note_int % 7]
         note_height = 5 - note_int // 7

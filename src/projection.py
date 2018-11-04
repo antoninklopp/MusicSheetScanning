@@ -1,6 +1,9 @@
 import cv2
 import matplotlib
-matplotlib.use('agg')
+try:
+    import Tkinter
+except ImportError:
+    matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from src.scan import threshold_image, scan_one_patch
 import numpy as np
@@ -39,7 +42,6 @@ def get_staffs(img):
             in_peak = True
 
     plt.plot(range(0,img.shape[0]), histogram)
-    # plt.show()
 
     return staffs
 
@@ -50,15 +52,19 @@ def create_patches(img, staffs, patch_number = 3):
     length_image = img.shape[1]
     for beginning_staff, end_staff in staffs:
         for i in range(0, length_image, int(length_image/patch_number)):
-            current_patch = img[max(0, beginning_staff - int((end_staff-beginning_staff))):min(length_image, end_staff + int((end_staff-beginning_staff))), \
+            current_patch = img[max(0, beginning_staff - int((end_staff-beginning_staff))):min(img.shape[0], end_staff + int((end_staff-beginning_staff))), \
             i:i + int(length_image/patch_number)]
-            yield current_patch, max(0, beginning_staff - int((end_staff-beginning_staff))), min(length_image, end_staff + int((end_staff-beginning_staff))), \
+            yield current_patch, max(0, beginning_staff - int((end_staff-beginning_staff))), min(img.shape[0], end_staff + int((end_staff-beginning_staff))), \
             i, i + int(length_image/patch_number)
 
 def staffs_precise(img, medium_staff):
     """
     Get the precise location of every staffs
     """
+    if img.shape[0] == 0:
+        print("Shape problem here", img.shape)
+        return None, None
+
     histogram = np.zeros((img.shape[0]))
 
     for i in range(img.shape[0]):
@@ -88,7 +94,13 @@ def staffs_precise(img, medium_staff):
             current_beginning = i
             in_peak = True
     
-    if number_staffs != 5:
+    if len(staffs) != 5:
+
+        if number_staffs < 3:
+            # Must have been an error here. 
+            # We stop here
+            return None, None
+
         print("Strange number of staffsn seems to be", number_staffs, "here")
         if medium_staff[0] != 0:
             height_staff = []
@@ -97,8 +109,10 @@ def staffs_precise(img, medium_staff):
         normal_staff = 1
         current_staff = 0
         print(staffs, medium_staff)
+        offset = 0
         while number_staffs != 5 and normal_staff < len(medium_staff) and current_staff < len(staffs):
             if staffs[current_staff][0] - medium_staff[normal_staff][0]/medium_staff[0] < height_staff[current_staff]/2: # staffs are matching
+                offset = int(medium_staff[normal_staff][0]/medium_staff[0] - staffs[current_staff][0])
                 current_staff += 1
                 normal_staff += 1
             elif number_staffs > 5:
@@ -107,14 +121,14 @@ def staffs_precise(img, medium_staff):
                 normal_staff += 1
             elif number_staffs < 5:
                 number_staffs += 1
-                staffs.insert(current_staff, [int(medium_staff[normal_staff][0]/medium_staff[0]), int(medium_staff[normal_staff][1]/medium_staff[0])])
+                staffs.insert(current_staff, [int(medium_staff[normal_staff][0]/medium_staff[0]) + offset, \
+                    int(medium_staff[normal_staff][1]/medium_staff[0]) + offset])
                 current_staff += 1
-            
-    
-    if number_staffs != len(staffs):
-        print("Incoherent number of staffs", number_staffs, len(staffs))
 
-    return staffs, number_staffs == 5
+        print("Corrected staff")
+        print(staffs)
+
+    return staffs, len(staffs) == 5
 
 def process_patches(img, staffs, img_output):
     correct_staff = 0
@@ -125,7 +139,10 @@ def process_patches(img, staffs, img_output):
         patch_number = img.shape[1]//400 + 1
         for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs, patch_number=patch_number):
             cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
+            cv2.imwrite("output/output_projection.png", img_output)
             staffs_pre, correct = staffs_precise(patch, medium_staff)
+            if staffs_pre is None:
+                continue
             all_staff += 1
             if correct is True:
                 correct_staff += 1
@@ -168,7 +185,3 @@ def get_cleaned_sheet(img_file):
     img_with_staffs = cv2.imread(img_file)
     staffs = get_staffs(img)
     return process_patches(img, staffs, img_with_staffs)
-
-if __name__ == "__main__":
-    staffs = get_staffs(img)
-    process_patches(img, staffs, cv2.imread(img_file))
