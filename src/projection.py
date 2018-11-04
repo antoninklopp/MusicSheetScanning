@@ -1,4 +1,6 @@
 import cv2
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from src.scan import threshold_image, scan_one_patch
 import numpy as np
