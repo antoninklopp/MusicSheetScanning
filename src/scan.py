@@ -39,9 +39,9 @@ key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 staff_lower, staff_upper, staff_thresh = 45, 100, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
 flat_lower, flat_upper, flat_thresh = 45, 100, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.75
-half_lower, half_upper, half_thresh = 45, 100, 0.65
-whole_lower, whole_upper, whole_thresh = 45, 100, 0.60
+quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.80
+half_lower, half_upper, half_thresh = 45, 100, 0.80
+whole_lower, whole_upper, whole_thresh = 45, 100, 0.80
 bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
 doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.65
 croches_lower, croches_upper, croches_thresh = 45, 100, 0.65
@@ -376,7 +376,6 @@ def look_for_key(img_gray):
     key_found = 0
     current_key = None
     for key in key_files:
-        print("looking for", key)
         key_recs = locate_images(img_gray, [cv2.imread(key, 0)], key_lower, key_upper, key_thresh)
         key_recs = merge_recs([j for i in key_recs for j in i], 0.5)
         if key_recs:
@@ -384,12 +383,9 @@ def look_for_key(img_gray):
             current_key = key.split("/")[-1][:-4]
     
     if key_found > 1:
-        print("More than one key found, strange")
-    else:
-        print("key found", current_key)
+        print("More than one key found, should not happen")
 
     return current_key
-
 
 
 def scan_one_patch(img_gray, staffs):
