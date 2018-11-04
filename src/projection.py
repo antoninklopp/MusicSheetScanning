@@ -130,10 +130,11 @@ def process_patches(img, staffs, img_output):
             if correct is True:
                 correct_staff += 1
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
-            for i, (staff_begin, staff_end) in enumerate(staffs_pre):
+            for index, (staff_begin, staff_end) in enumerate(staffs_pre):
                 for j in range(patch.shape[1]):
                     for i in range(staff_begin, staff_end + 1):
-                        img_output[i + begin_x, begin_y + j] = [255, 0, 0]
+                        if img_output is not None:
+                            img_output[i + begin_x, begin_y + j] = [255, 0, 0]
                     if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
                         or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
                         # print("Here a note")
@@ -143,7 +144,8 @@ def process_patches(img, staffs, img_output):
                             # print("ERASE")
                             img[i + begin_x, begin_y + j] = 255
                             patch[i, j] = 255
-                            img_output[i + begin_x, begin_y + j] = [255, 255, 255]
+                            if img_output is not None:
+                                img_output[i + begin_x, begin_y + j] = [255, 255, 255]
 
             # patch is now cleaned, we can do the recognition on it
             # TODO : implement the patch by patch recognition
