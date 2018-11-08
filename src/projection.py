@@ -7,6 +7,7 @@ except ImportError:
 import matplotlib.pyplot as plt
 from src.scan import threshold_image, scan_one_patch, look_for_key
 import numpy as np
+from src.output import reconstruct_sheet    
 
 img_file = "Images/sonate-1.png"
 
@@ -170,12 +171,14 @@ def process_patches(img, staffs, img_output):
             # patch is now cleaned, we can do the recognition on it
             # TODO : implement the patch by patch recognition
             print(look_for_key(patch))
-            notes = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
+            notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
             all_notes += notes
             for n in notes:
                 cv2.rectangle(img_output, (int(n.rec.x + begin_y), int(n.rec.y + begin_x)), \
                 (int(n.rec.x + n.rec.w + begin_y), int(n.rec.y + n.rec.h + begin_x)), n.get_color())
                 sheet.write(n.__str__() + "\n")
+
+            reconstruct_sheet(notes, bars, 4)
             
     cv2.imwrite("output/output_projection.png", img_output)
     cv2.imwrite("output/gray.png", img)

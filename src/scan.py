@@ -42,7 +42,7 @@ staff_lower, staff_upper, staff_thresh = 45, 100, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
 flat_lower, flat_upper, flat_thresh = 45, 100, 0.70
 quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.70
-half_lower, half_upper, half_thresh = 45, 100, 0.75
+half_lower, half_upper, half_thresh = 70, 90, 0.60
 whole_lower, whole_upper, whole_thresh = 45, 100, 0.70
 bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
 doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.70
@@ -392,8 +392,8 @@ def look_for_key(img_gray):
 
 def remove_note(list_where_remove, global_list):
     # Remove notes to close, that were recognized as being the same.
-    for note1 in list_where_remove:
-        for note2 in global_list:
+    for note2 in global_list:
+        for note1 in list_where_remove:
             if note1 != note2:
                 if abs(note1.rec.distance(note2.rec)) < max(note1.rec.w, note2.rec.w) and note1.sym != note2.sym:
                     # We decide to remove the "sortest" note, because if a whole and a quarter 
@@ -401,6 +401,7 @@ def remove_note(list_where_remove, global_list):
                     # a quarter 
                     if note1.sym < note2.sym:
                         list_where_remove.remove(note1)
+                        break
 
 def scan_one_patch(img_gray, staffs):
     """
@@ -441,6 +442,10 @@ def scan_one_patch(img_gray, staffs):
     whole_recs = locate_images(img_gray, whole_imgs, whole_lower, whole_upper, whole_thresh)
 
     whole_recs = merge_recs([j for i in whole_recs for j in i], 0.5)
+
+    bars_recs = locate_images(img_gray, bars_imgs, bars_lower, bars_upper, bars_thresh)
+
+    bars_recs = merge_recs([j for i in bars_recs for j in i], 0.5)
 
     # staff_sharps = [Note(r, "sharp", box)
     #     for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
@@ -496,4 +501,11 @@ def scan_one_patch(img_gray, staffs):
     staff_notes = quarter_notes + half_notes + whole_notes
     staff_notes.sort(key=lambda n: n.rec.x)
 
-    return staff_notes
+    # We llok for measure bars. 
+    for bar in bars_recs:
+        for note in staff_notes:
+            if abs(bar.middle[0] - note.rec.middle[0]) < note.rec.w/2:
+                bars_recs.remove(bar)
+                break
+
+    return staff_notes, bars_recs

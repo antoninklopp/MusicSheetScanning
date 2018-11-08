@@ -64,6 +64,7 @@ class Note(object):
             note_height = 5 - note_int // 7
             if note_name == "a" or note_name == "b":
                 note_height -= 1
+            self.note_height = note_height
             self.note_name = note_name + str(note_height)
             return note_name + str(note_height)
         else:
@@ -115,6 +116,15 @@ class Note(object):
                     return True
 
         return False
+
+    def lilypond_notation(self):
+        pitch = ""
+        if self.note_height < 4:
+            pitch = "," * (4 - self.note_height)
+        else:
+            pitch = "'" * (self.note_height - 4)
+
+        return self.note_name[0] + pitch + str(self.sym)
 
     def __str__(self):
         if self.note_name:
