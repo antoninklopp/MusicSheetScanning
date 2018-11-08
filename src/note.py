@@ -14,6 +14,7 @@ class Note(object):
 
         self.middle = rec.y + (rec.h / 2.0)
 
+        self.note_int = 0
         self.find_height(staffs, key=key)
 
     def set_as_sharp(self):
@@ -58,7 +59,7 @@ class Note(object):
         """
         if key == "g":
             note_int = int(round(note_int))
-            # note_int = 0 corresponds to e3
+            self.note_int = note_int
             note_name = note_names[note_int % 7]
             note_height = 5 - note_int // 7
             if note_name == "a" or note_name == "b":
@@ -96,6 +97,24 @@ class Note(object):
             return "HALF QUARTER"
         elif self.sym == 16:
             return "QUARTER QUARTER"
+
+    def is_contained_time(self, rec, dilatation=0):
+        """
+        If a there is bar to say the length of a note, it can only be at a certain location.
+        Under if the note_int is < 5
+        Over the note if the note is > 5
+        """
+        if rec.contains_in_x(self.rec, dilatation):
+            if self.note_int < 5:
+                if rec.middle[1] < self.rec.middle[1]:
+                    print("croche", self.note_name, self.note_int, rec.middle, self.rec.middle)
+                    return True
+            else:
+                if rec.middle[1] > self.rec.middle[1]:
+                    print("croche", self.note_name, self.note_int)
+                    return True
+
+        return False
 
     def __str__(self):
         if self.note_name:

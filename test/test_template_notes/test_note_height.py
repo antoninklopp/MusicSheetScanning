@@ -13,13 +13,14 @@ class TestHeight:
     def one_note(self, image):
         img = cv2.imread(image, 0)
         staffs = get_staffs(img)
-        notes = process_patches(img, staffs, cv2.imread(img_file))
+        img_output = cv2.imread(image)
+        notes = process_patches(img, staffs, img_output)
         if len(notes) != 1:
             print("Note exactly one note discovered")
             if len(notes) == 0:
                 print("No notes discovered")
             else:
-                print("notes discovered", "\n".join(notes))
+                print("notes discovered", "\n".join([n.__str__() for n in notes]))
             return False
         if notes[0].note_name != image.split("/")[-1][:-4]:
             print("Note name needed", image.split("/")[-1][:-3], "note name outputed", notes[0].note_name)

@@ -21,6 +21,7 @@ bars_files = glob.glob("resources/template/measures/*.png")
 #time
 doubles_files = glob.glob("resources/template/doubles/*.png")
 croches_files = glob.glob("resources/template/croches/*.png")
+croches_indiv_files = glob.glob("resources/template/croches/individual/*.png")
 
 #keys
 key_files = glob.glob("resources/template/key/*.png")
@@ -34,17 +35,19 @@ whole_imgs = [cv2.imread(whole_file, 0) for whole_file in whole_files]
 bars_imgs = [cv2.imread(bars_file, 0) for bars_file in bars_files]
 doubles_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
 croches_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
+croches_indiv_imgs = [cv2.imread(croches_indiv_file, 0) for croches_indiv_file in croches_indiv_files]
 key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 
 staff_lower, staff_upper, staff_thresh = 45, 100, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
 flat_lower, flat_upper, flat_thresh = 45, 100, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.80
-half_lower, half_upper, half_thresh = 45, 100, 0.80
-whole_lower, whole_upper, whole_thresh = 45, 100, 0.75
+quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.70
+half_lower, half_upper, half_thresh = 45, 100, 0.75
+whole_lower, whole_upper, whole_thresh = 45, 100, 0.70
 bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
-doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.65
-croches_lower, croches_upper, croches_thresh = 45, 100, 0.65
+doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.70
+croches_lower, croches_upper, croches_thresh = 45, 100, 0.80
+croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 45, 100, 0.80
 key_lower, key_upper, key_thresh = 45, 100, 0.65
 
 
@@ -387,6 +390,17 @@ def look_for_key(img_gray):
 
     return current_key
 
+def remove_note(list_where_remove, global_list):
+    # Remove notes to close, that were recognized as being the same.
+    for note1 in list_where_remove:
+        for note2 in global_list:
+            if note1 != note2:
+                if abs(note1.rec.distance(note2.rec)) < max(note1.rec.w, note2.rec.w) and note1.sym != note2.sym:
+                    # We decide to remove the "sortest" note, because if a whole and a quarter 
+                    # are discovered at the same place, it is more probable that the real result is 
+                    # a quarter 
+                    if note1.sym < note2.sym:
+                        list_where_remove.remove(note1)
 
 def scan_one_patch(img_gray, staffs):
     """
@@ -401,9 +415,16 @@ def scan_one_patch(img_gray, staffs):
 
     doubles_recs = merge_recs([j for i in doubles_recs for j in i], 0.5)
 
-    croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh)
+    croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh) 
 
     croches_recs = merge_recs([j for i in croches_recs for j in i], 0.5)
+
+    croches_indiv_recs = []
+
+    for croche_indiv in croches_indiv_files:
+        croches_indiv_recs += locate_images(img_gray, [cv2.imread(croche_indiv, 0)], croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh)
+
+    croches_indiv_recs = merge_recs([j for i in croches_indiv_recs for j in i], 0.5)
 
     sharp_recs = locate_images(img_gray, sharp_imgs, sharp_lower, sharp_upper, sharp_thresh)
 
@@ -445,17 +466,32 @@ def scan_one_patch(img_gray, staffs):
                 note.set_as_flat()
                 break
 
+    # remove possible too many notes
+    remove_note(quarter_notes, sorted_notes)
+    remove_note(half_notes, sorted_notes)
+    remove_note(whole_notes, sorted_notes)
+
     # Comme certaines doubles peuvent aussi etre des croches, on passe d'abord sur les croches
     # puis on pourra potentiellement override avec des doubles.
     for t in croches_recs:
         for q in quarter_notes:
-            if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
+            if q.is_contained_time(t, dilatation=q.rec.w/2):
+                t.draw(img_gray, 0, 1)
                 q.sym = 8
 
     for t in doubles_recs:
         for q in quarter_notes:
-            if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
+            if q.is_contained_time(t, dilatation=q.rec.w/2):
+                t.draw(img_gray, 0, 1)
                 q.sym = 16
+
+    # On check les croches et doubles individuelles
+    for t in croches_indiv_recs:
+        for q in quarter_notes:
+            if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
+                t.draw(img_gray, 0, 1)
+                q.sym = 8
+
 
     staff_notes = quarter_notes + half_notes + whole_notes
     staff_notes.sort(key=lambda n: n.rec.x)

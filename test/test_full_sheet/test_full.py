@@ -4,7 +4,7 @@ import cv2
 class TestFull:
 
     def test_full_sheet(self):
-        img_file = "Images/sonate-1.png"
+        img_file = "Images/nuit.png"
         img = cv2.imread(img_file, 0)
         staffs = get_staffs(img)
         process_patches(img, staffs, cv2.imread(img_file))

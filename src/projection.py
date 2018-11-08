@@ -141,6 +141,7 @@ def process_patches(img, staffs, img_output):
     with open("output/output_notes.txt", "w") as sheet:
         patch_number = img.shape[1]//400 + 1
         for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs, patch_number=patch_number):
+            patch_clone = np.copy(patch)
             cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
             cv2.imwrite("output/output_projection.png", img_output)
             staffs_pre, correct = staffs_precise(patch, medium_staff)
@@ -151,18 +152,30 @@ def process_patches(img, staffs, img_output):
                 correct_staff += 1
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
             for index, (staff_begin, staff_end) in enumerate(staffs_pre):
+                last_note_index = -1
                 for j in range(patch.shape[1]):
-                    for i in range(staff_begin, staff_end + 1):
-                        if img_output is not None:
-                            img_output[i + begin_x, begin_y + j] = [255, 0, 0]
+                    # for i in range(staff_begin, staff_end + 1):
+                    #     if img_output is not None:
+                    #         img_output[i + begin_x, begin_y + j] = [255, 0, 0]
                     if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
                         or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
                         # print("Here a note")
-                        pass
+                        if 3 < abs(last_note_index - j) and abs(last_note_index - j) < 7 and last_note_index != -1:
+                            print("restoring deleted data", last_note_index, j)
+                            # We need to restore between this two indices
+                            for k in range(last_note_index, j):
+                                for i in range(staff_begin - 2, staff_end+3):
+                                    patch[i, k] = patch_clone[i, k] # Restore the previous pixels
+                                    if img_output is not None:
+                                        # if img[i + begin_x, begin_y + j] == 0:
+                                        img_output[i + begin_x, begin_y + k] = [patch_clone[i, k], \
+                                            patch_clone[i, k], patch_clone[i, k]]
+                                        # else:
+                                        #     img_output[i + begin_x, begin_y + j] = [0, 255, 0]
+                        last_note_index = j
                     else:
                         for i in range(staff_begin - 2, staff_end+3):
                             # print("ERASE")
-                            img[i + begin_x, begin_y + j] = 255
                             patch[i, j] = 255
                             if img_output is not None:
                                 img_output[i + begin_x, begin_y + j] = [255, 255, 255]
