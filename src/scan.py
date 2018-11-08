@@ -41,7 +41,7 @@ sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
 flat_lower, flat_upper, flat_thresh = 45, 100, 0.70
 quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.80
 half_lower, half_upper, half_thresh = 45, 100, 0.80
-whole_lower, whole_upper, whole_thresh = 45, 100, 0.80
+whole_lower, whole_upper, whole_thresh = 45, 100, 0.75
 bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
 doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.65
 croches_lower, croches_upper, croches_thresh = 45, 100, 0.65
@@ -84,7 +84,7 @@ def open_file(path):
     subprocess.run([cmd, path])
 
 def filter_image_horizontal(img):
-    
+
     kernel = np.array([[-1] * 3,
     [0] * 3,
     [1] * 3])
@@ -96,7 +96,7 @@ def filter_image_vertical(img):
     """
     Vertical filter for an image
     """
-    
+
     kernel = np.array([[-1, 0, 1],
     [-1, 0, 1],
     [-1, 0, 1]])
@@ -311,7 +311,7 @@ def recognize_one_image(img_file):
         staffs.sort(key=lambda r: r.x)
 
         # Comme certaines doubles peuvent aussi etre des croches, on passe d'abord sur les croches
-        # puis on pourra potentiellement override avec des doubles. 
+        # puis on pourra potentiellement override avec des doubles.
         for t in croches_recs:
             for q in quarter_notes:
                 if t.contains_in_x(q.rec, dilatation=q.rec.w/2) and t.overlap(box) > 0:
@@ -381,7 +381,7 @@ def look_for_key(img_gray):
         if key_recs:
             key_found += 1
             current_key = key.split("/")[-1][:-4]
-    
+
     if key_found > 1:
         print("More than one key found, should not happen")
 
@@ -446,7 +446,7 @@ def scan_one_patch(img_gray, staffs):
                 break
 
     # Comme certaines doubles peuvent aussi etre des croches, on passe d'abord sur les croches
-    # puis on pourra potentiellement override avec des doubles. 
+    # puis on pourra potentiellement override avec des doubles.
     for t in croches_recs:
         for q in quarter_notes:
             if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
