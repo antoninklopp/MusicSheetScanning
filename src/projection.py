@@ -152,7 +152,6 @@ def process_patches(img, staffs, img_output):
                 correct_staff += 1
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
             for index, (staff_begin, staff_end) in enumerate(staffs_pre):
-                last_note_index = -1
                 for j in range(patch.shape[1]):
                     # for i in range(staff_begin, staff_end + 1):
                     #     if img_output is not None:
@@ -160,19 +159,7 @@ def process_patches(img, staffs, img_output):
                     if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
                         or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
                         # print("Here a note")
-                        if 3 < abs(last_note_index - j) and abs(last_note_index - j) < 7 and last_note_index != -1:
-                            print("restoring deleted data", last_note_index, j)
-                            # We need to restore between this two indices
-                            for k in range(last_note_index, j):
-                                for i in range(staff_begin - 2, staff_end+3):
-                                    patch[i, k] = patch_clone[i, k] # Restore the previous pixels
-                                    if img_output is not None:
-                                        # if img[i + begin_x, begin_y + j] == 0:
-                                        img_output[i + begin_x, begin_y + k] = [patch_clone[i, k], \
-                                            patch_clone[i, k], patch_clone[i, k]]
-                                        # else:
-                                        #     img_output[i + begin_x, begin_y + j] = [0, 255, 0]
-                        last_note_index = j
+                        pass
                     else:
                         for i in range(staff_begin - 2, staff_end+3):
                             # print("ERASE")
