@@ -97,3 +97,4 @@ resources/template/created/*
 .vscode/
 *.txt
 *.ly
+*.pdf

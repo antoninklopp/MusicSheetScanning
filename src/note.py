@@ -119,10 +119,10 @@ class Note(object):
 
     def lilypond_notation(self):
         pitch = ""
-        if self.note_height < 4:
-            pitch = "," * (4 - self.note_height)
+        if self.note_height < 3:
+            pitch = "," * (3 - self.note_height)
         else:
-            pitch = "'" * (self.note_height - 4)
+            pitch = "'" * (self.note_height - 3)
 
         return self.note_name[0] + pitch + str(self.sym)
 

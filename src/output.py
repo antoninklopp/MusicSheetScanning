@@ -1,5 +1,6 @@
 from src.note import Note
 from src.rectangle import Rectangle
+import os
 
 def write_check_notes(notes, number_times_per_bars):
     # First we check that time is ok.
@@ -22,7 +23,7 @@ def write_check_notes(notes, number_times_per_bars):
     return return_notes
 
 
-def reconstruct_sheet(notes, bars, number_times_per_bars=4):
+def reconstruct_sheet(notes, bars, number_times_per_bars=4, end_patch=False):
     """
     Reconstruct the sheet as a lilypond file
     """
@@ -30,19 +31,18 @@ def reconstruct_sheet(notes, bars, number_times_per_bars=4):
         note_index = 0
         bars_index = 0
         current_notes = []
-        while note_index < len(notes) or bars_index < len(bars):
-            if notes[note_index].rec.x < bars[bars_index].x:
+        while note_index < len(notes):
                 current_notes.append(notes[note_index])
                 note_index += 1
-            else:
-                bars_index += 1
-                written_notes = write_check_notes(current_notes, number_times_per_bars)
-                current_notes = []
-                if written_notes is not None and len(written_notes) != 0:
-                    print("debut")
-                    f.write(" ".join(written_notes))
-                    f.write("\n")
-                    print("fin")
-                break
+        written_notes = write_check_notes(current_notes, number_times_per_bars)
+        current_notes = []
+        if written_notes is not None and len(written_notes) != 0:
+            print("debut")
+            f.write(" ".join(written_notes))
+            f.write("\n")
+            print("fin")
+
+        if end_patch is True:
+            f.write("}\n{\n")
 
     print("OK")

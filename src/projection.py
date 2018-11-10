@@ -139,6 +139,7 @@ def process_patches(img, staffs, img_output):
     all_staff = 0
     medium_staff = [0, [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
     all_notes = []
+    all_bars = []
     with open("output/output_notes.txt", "w") as sheet:
         patch_number = img.shape[1]//400 + 1
         for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs, patch_number=patch_number):
@@ -173,12 +174,19 @@ def process_patches(img, staffs, img_output):
             print(look_for_key(patch))
             notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
             all_notes += notes
+            all_bars += bars
             for n in notes:
                 cv2.rectangle(img_output, (int(n.rec.x + begin_y), int(n.rec.y + begin_x)), \
                 (int(n.rec.x + n.rec.w + begin_y), int(n.rec.y + n.rec.h + begin_x)), n.get_color())
                 sheet.write(n.__str__() + "\n")
 
-            reconstruct_sheet(notes, bars, 4)
+            print(notes)
+            end_patch = False
+            print(end_y, img.shape[1])
+            if end_y == img.shape[1] - 1:
+                end_patch=True
+                print("fin patch")
+            reconstruct_sheet(notes, bars, 4, end_patch=end_patch)
             
     cv2.imwrite("output/output_projection.png", img_output)
     cv2.imwrite("output/gray.png", img)
