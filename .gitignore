@@ -95,3 +95,6 @@ resources/template/created/*
 *.pdf
 *.jpg
 .vscode/
+*.txt
+*.ly
+*.pdf
