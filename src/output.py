@@ -39,10 +39,10 @@ def reconstruct_sheet(notes, bars, number_times_per_bars=4, end_patch=False):
         if written_notes is not None and len(written_notes) != 0:
             print("debut")
             f.write(" ".join(written_notes))
-            f.write("\n")
+            f.write(" ")
             print("fin")
 
         if end_patch is True:
-            f.write("}\n{\n")
+            f.write("\\bar \"\" \\break\n")
 
     print("OK")

@@ -5,7 +5,7 @@ try:
 except ImportError:
     matplotlib.use('agg')
 import matplotlib.pyplot as plt
-from src.scan import threshold_image, scan_one_patch, look_for_key
+from src.scan import threshold_image, scan_one_patch, look_for_key, look_for_time_indication
 import numpy as np
 from src.output import reconstruct_sheet    
 
@@ -131,7 +131,7 @@ def staffs_precise(img, medium_staff):
 
     return staffs, len(staffs) == 5
 
-def process_patches(img, staffs, img_output):
+def process_patches(img, staffs, img_output, time_indication=None):
     """
     Process all the patches and extract the notes
     """
@@ -186,7 +186,7 @@ def process_patches(img, staffs, img_output):
             if end_y == img.shape[1] - 1:
                 end_patch=True
                 print("fin patch")
-            reconstruct_sheet(notes, bars, 4, end_patch=end_patch)
+            reconstruct_sheet(notes, bars, 3, end_patch=end_patch)
             
     cv2.imwrite("output/output_projection.png", img_output)
     cv2.imwrite("output/gray.png", img)
