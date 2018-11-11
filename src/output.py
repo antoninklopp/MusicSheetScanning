@@ -1,6 +1,7 @@
 from src.note import Note
 from src.rectangle import Rectangle
 import os
+from src.instrument import Instrument
 
 def write_check_notes(notes, number_times_per_bars):
     # First we check that time is ok.
@@ -32,8 +33,8 @@ def reconstruct_sheet(notes, bars, number_times_per_bars=4, end_patch=False):
         bars_index = 0
         current_notes = []
         while note_index < len(notes):
-                current_notes.append(notes[note_index])
-                note_index += 1
+            current_notes.append(notes[note_index])
+            note_index += 1
         written_notes = write_check_notes(current_notes, number_times_per_bars)
         current_notes = []
         if written_notes is not None and len(written_notes) != 0:
@@ -46,3 +47,21 @@ def reconstruct_sheet(notes, bars, number_times_per_bars=4, end_patch=False):
             f.write("\\bar \"\" \\break\n")
 
     print("OK")
+
+def get_header():
+    return "\\header { \n" +\
+        "title = \"Reconstructed sheet\" \n"+\
+        "}\n"
+
+def output_instruments(instruments):
+    with open("output/sheet_reconstructed.ly", "w") as f:
+
+        f.write(get_header())
+
+        for instru in instruments:
+            f.write(instru.get_lilypond_output())
+
+        f.write("\n\\score {" + "\n\\new StaffGroup <<\n")
+        for i in range(len(instruments)):
+            f.write("\\new Staff << \\instrument" +  chr(i + 97) + " >> \n")
+        f.write(">>\n}\n")

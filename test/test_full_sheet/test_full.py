@@ -9,12 +9,8 @@ class TestFull:
         img_file = "Images/nuit.png"
         img = cv2.imread(img_file, 0)
         time_indication = look_for_time_indication(img)
-        staffs = get_staffs(img)
-        with open("output/sheet_reconstructed.ly", "w") as f:
-            f.write("{\n\\time 3/4\n")
-        process_patches(img, staffs, cv2.imread(img_file), time_indication)
-        with open("output/sheet_reconstructed.ly", "a") as f:
-            f.write("}")
+        staffs, number_instrument = get_staffs(img)
+        process_patches(img, staffs, cv2.imread(img_file), time_indication, number_instrument)
         print("Creating pdf file ....")
         os.system("lilypond output/sheet_reconstructed.ly")
         print("Created")

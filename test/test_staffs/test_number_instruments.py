@@ -2,6 +2,9 @@ from src.projection import get_staffs
 import cv2
 
 class TestStaffs:
+    """
+    A class to test all that relates to staffs. 
+    """
 
     def test_number_staffs(self):
         """

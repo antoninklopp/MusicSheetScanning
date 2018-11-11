@@ -7,7 +7,8 @@ except ImportError:
 import matplotlib.pyplot as plt
 from src.scan import threshold_image, scan_one_patch, look_for_key, look_for_time_indication
 import numpy as np
-from src.output import reconstruct_sheet    
+from src.output import reconstruct_sheet, output_instruments
+from src.instrument import Instrument  
 
 img_file = "Images/sonate-1.png"
 
@@ -156,7 +157,7 @@ def staffs_precise(img, medium_staff):
 
     return staffs, len(staffs) == 5
 
-def process_patches(img, staffs, img_output, time_indication=None):
+def process_patches(img, staffs, img_output, time_indication=None, number_instruments=1):
     """
     Process all the patches and extract the notes
     """
@@ -165,9 +166,11 @@ def process_patches(img, staffs, img_output, time_indication=None):
     medium_staff = [0, [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
     all_notes = []
     all_bars = []
+    instruments = [Instrument(i) for i in range(number_instruments)]
     with open("output/output_notes.txt", "w") as sheet:
         patch_number = img.shape[1]//400 + 1
-        for patch, begin_x, end_x, begin_y, end_y in create_patches(img, staffs, patch_number=patch_number):
+        for i, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=patch_number)):
+            staff_number = i//patch_number # Useful to check the number of instruments
             patch_clone = np.copy(patch)
             cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
             cv2.imwrite("output/output_projection.png", img_output)
@@ -205,13 +208,17 @@ def process_patches(img, staffs, img_output, time_indication=None):
                 (int(n.rec.x + n.rec.w + begin_y), int(n.rec.y + n.rec.h + begin_x)), n.get_color())
                 sheet.write(n.__str__() + "\n")
 
+            instruments[staff_number%number_instruments].add_notes(notes, bars)
+
             print(notes)
             end_patch = False
             print(end_y, img.shape[1])
             if end_y == img.shape[1] - 1:
                 end_patch=True
                 print("fin patch")
-            reconstruct_sheet(notes, bars, 3, end_patch=end_patch)
+            # reconstruct_sheet(notes, bars, 3, end_patch=end_patch)
+
+    output_instruments(instruments)
             
     cv2.imwrite("output/output_projection.png", img_output)
     cv2.imwrite("output/gray.png", img)

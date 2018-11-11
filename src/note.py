@@ -117,8 +117,9 @@ class Note(object):
 
         return False
 
-    def lilypond_notation(self):
+    def lilypond_notation(self, key="g"):
         pitch = ""
+        self.find_note(self.note_int, key) # Find the note with the current key
         if self.note_height < 3:
             pitch = "," * (3 - self.note_height)
         else:
