@@ -14,6 +14,14 @@ img_file = "Images/sonate-1.png"
 img = cv2.imread(img_file, 0)
 
 def get_staffs(img):
+    """
+    Get the staffs
+    
+    When more than one instrument is predicted. 
+    We will give n list of staffs representing n instruments. 
+    """
+
+    ## First we find all the staffs
     img = threshold_image(img, 200)
 
     histogram = np.zeros((img.shape[0]))
@@ -42,9 +50,26 @@ def get_staffs(img):
             current_beginning = i
             in_peak = True
 
-    plt.plot(range(0,img.shape[0]), histogram)
+    # plt.plot(range(0,img.shape[0]), histogram)
 
-    return staffs
+    ## We now have to find the number of instruments thanks to the 
+    # space between staffs.
+    distance_between_staffs = []
+    for i in range(0, len(staffs)-1):
+        distance_between_staffs.append((staffs[i+1][0] + staffs[i+1][1])/2.0 - (staffs[i][0] + staffs[i][1])/2.0)
+
+    number_instruments = 1
+
+    # Because the gap between two staffs should be very similar, if the mean gap is bigger than 1.05 times the first gap,
+    # we are almost sure that we have several instruments
+    if np.mean(distance_between_staffs) > 1.05 * distance_between_staffs[0]:
+        # We have several instruments
+        for i in range(0, len(distance_between_staffs)):
+            if distance_between_staffs[i] > 1.05 * distance_between_staffs[0]:
+                number_instruments = i + 1
+                break
+
+    return staffs, number_instruments
 
 def create_patches(img, staffs, patch_number = 3):
     """
