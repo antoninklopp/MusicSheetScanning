@@ -9,6 +9,7 @@ from src.scan import threshold_image, scan_one_patch, look_for_key, look_for_tim
 import numpy as np
 from src.output import reconstruct_sheet, output_instruments
 from src.instrument import Instrument  
+from src.key import Key
 
 img_file = "Images/sonate-1.png"
 
@@ -202,8 +203,12 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
 
             # patch is now cleaned, we can do the recognition on it
             # TODO : implement the patch by patch recognition
-            print(look_for_key(patch))
-            notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
+            key = look_for_key(img[begin_x:end_x, begin_y:end_y])
+            print("key found", key)
+            instruments[staff_number%number_instruments].change_key(key)
+            if key is None:
+                key = instruments[staff_number%number_instruments].get_current_key()
+            notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre], key)
 
             ## Update notes and bars by changing their global height and notes
             for n in notes:

@@ -10,6 +10,7 @@ from random import randint
 from midiutil.MidiFile import MIDIFile
 import glob
 import os
+from src.key import Key
 
 staff_files = glob.glob("resources/template/staff/*.png")
 quarter_files = glob.glob("resources/template/quarter/*.png")
@@ -157,9 +158,9 @@ def look_for_key(img_gray):
     for key in key_files:
         key_recs = locate_images(img_gray, [cv2.imread(key, 0)], key_lower, key_upper, key_thresh)
         key_recs = merge_recs([j for i in key_recs for j in i], 0.5)
-        if key_recs:
+        if len(key_recs) != 0:
             key_found += 1
-            current_key = key.split("/")[-1][:-4]
+            current_key = Key(key_recs[0], key.split("/")[-1][:-4])
 
     if key_found > 1:
         print("More than one key found, should not happen")
@@ -199,7 +200,7 @@ def remove_note(list_where_remove, global_list):
                         list_where_remove.remove(note1)
                         break
 
-def scan_one_patch(img_gray, staffs):
+def scan_one_patch(img_gray, staffs, key=None):
     """
     Scanning one patch of the image
     """
@@ -247,9 +248,9 @@ def scan_one_patch(img_gray, staffs):
     #     for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
     # staff_flats = [Note(r, "flat", box)
     #     for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-    quarter_notes = [Note(r, 4, staffs) for r in quarter_recs]
-    half_notes = [Note(r, 2, staffs) for r in half_recs]
-    whole_notes = [Note(r, 1, staffs) for r in whole_recs]
+    quarter_notes = [Note(r, 4, staffs, key=key) for r in quarter_recs]
+    half_notes = [Note(r, 2, staffs, key=key) for r in half_recs]
+    whole_notes = [Note(r, 1, staffs, key=key) for r in whole_recs]
 
     sorted_notes = sorted(quarter_notes + half_notes + whole_notes, key=lambda x:x.rec.x)
 

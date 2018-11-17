@@ -1,6 +1,7 @@
 from src.rectangle import Rectangle
 import cv2
 import numpy as np
+from src.key import Key
 
 note_step = 0.0625
 
@@ -8,15 +9,17 @@ note_names = ["g", "f", "e", "d", "c", "b", "a"]
 
 class Note(object):
 
-    def __init__(self, rec, sym, staffs, key="g"):
+    def __init__(self, rec, sym, staffs, key=Key(Rectangle(0, 0, 0, 0), "g")):
         self.rec = rec
         self.sym = sym
 
         self.middle = rec.y + (rec.h / 2.0)
 
-        self.note_int = 0
+        self.note_int = 1000
+
         self.find_height(staffs, key=key)
         self.lilypond_time = ""
+        self.note_name = None
 
     def set_as_sharp(self):
         self.note += "#"
@@ -58,19 +61,21 @@ class Note(object):
         Find the stringified note corresponding to a given integer
         Our starting point note is g5
         """
-        if key == "g":
+        self.note_int = int(round(note_int))
+        if key.name == "g":
             note_int = int(round(note_int))
-            self.note_int = note_int
-            note_name = note_names[note_int % 7]
-            note_height = 5 - note_int // 7
-            if note_name == "a" or note_name == "b":
-                note_height -= 1
-            self.note_height = note_height
-            self.note_name = note_name + str(note_height)
-            return note_name + str(note_height)
+        elif key.name == "f":
+            note_int = int(round(note_int)) + 12
         else:
             print("Error, key unknown, not implemented")
             return None
+        note_name = note_names[note_int % 7]
+        note_height = 5 - note_int // 7
+        if note_name == "a" or note_name == "b":
+            note_height -= 1
+        self.note_height = note_height
+        self.note_name = note_name + str(note_height)
+        return note_name + str(note_height)
 
 
     def get_color(self):

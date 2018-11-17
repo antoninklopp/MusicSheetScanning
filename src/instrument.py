@@ -3,23 +3,29 @@ from src.rectangle import Rectangle
 
 class Instrument:
 
-    def __init__(self, number, name="", number_times_per_bars=3):
+    def __init__(self, number, name="", number_times_per_bars=3, key=None):
         """
         Initializing instrument class
         """
         self.number = number
         self.name = name
-        self.keys = []
         self.notes = []
         self.bars = []
-        self.current_key = Key(Rectangle(0, 0, 0, 0), "g")
+        self.current_key = None
+        self.keys = []
         self.number_times_per_bars = number_times_per_bars
 
     def change_key(self, new_key):
         """
         Change key during instrument class
         """
-        self.keys.append(new_key)
+        if new_key is not None:
+            if self.current_key is None:
+                self.current_key = new_key
+                self.keys.append(new_key)
+            elif (new_key.name != self.current_key.name):
+                self.current_key = new_key
+                self.keys.append(new_key)
 
     def add_notes(self, notes, bars):
         """
@@ -27,6 +33,9 @@ class Instrument:
         """
         self.notes += notes
         self.bars += bars
+
+    def get_current_key(self):
+        return self.current_key
 
     def check_notes(self, notes):
         """
@@ -53,7 +62,7 @@ class Instrument:
         print("NEW BAR")
 
         for note in notes:
-            return_notes += note.lilypond_notation(self.current_key.name) + " "
+            return_notes += note.lilypond_notation(self.current_key) + " "
             print(note)
 
         print("total", total)
@@ -73,7 +82,8 @@ class Instrument:
             print("No keys found, default is g")
             lilypond_output += Key(Rectangle(0, 0, 0, 0), "g").get_lilypond_output() + "\n"
         else:
-            lilypond_output += self.key[0].get_lilypond_output() + "\n"
+            print("KEY", self.keys[0].name)
+            lilypond_output += self.keys[0].get_lilypond_output() + "\n"
 
         lilypond_output += "\\time 3/4\n"
 
