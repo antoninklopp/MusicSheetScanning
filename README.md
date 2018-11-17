@@ -1,4 +1,4 @@
-[![Build Status](https://semaphoreci.com/api/v1/antoninklopp/musicsheetscanning/branches/dev/badge.svg)](https://semaphoreci.com/antoninklopp/musicsheetscanning)
+[![Build Status](https://semaphoreci.com/api/v1/antoninklopp/musicsheetscanning-2/branches/master/badge.svg)](https://semaphoreci.com/antoninklopp/musicsheetscanning-2)
 
 ## Music Sheet Scanning
 
