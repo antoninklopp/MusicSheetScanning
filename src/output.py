@@ -51,6 +51,7 @@ def reconstruct_sheet(notes, bars, number_times_per_bars=4, end_patch=False):
 def get_header():
     return "\\header { \n" +\
         "title = \"Reconstructed sheet\" \n"+\
+        "composer = \"Reconstructed by MusicSheetScanning\" \n" + \
         "}\n"
 
 def output_instruments(instruments):

@@ -32,25 +32,31 @@ class Instrument:
         """
         Returns a string representing check notes
         """
-        print("number notes", len(notes))
         total = 0
         for note in notes:
             total += 4/note.sym
 
         if total != self.number_times_per_bars:
-            print("Problem")
+            # print("Problem")
             if total > self.number_times_per_bars:
                 print("Too much notes, strange")
+            elif len(notes) == 1:
+                notes[0].add_time(total - 4/self.notes[0].sym)
             else:
                 if self.number_times_per_bars - total == 0.5:
                     for i in range(len(notes) - 1):
                         if notes[i].sym == 4 and notes[i + 1].sym == 8: # Looking for patterns
-                            pass
+                            notes[i].add_time(0.5)
 
         return_notes = " "
 
+        print("NEW BAR")
+
         for note in notes:
             return_notes += note.lilypond_notation(self.current_key.name) + " "
+            print(note)
+
+        print("total", total)
 
         return return_notes + " "
 
@@ -77,17 +83,19 @@ class Instrument:
         current_notes = []
 
         while note_index < len(self.notes) and bars_index < len(self.bars):
-            if len(self.keys) > key_index and self.keys[key_index].rec.middle < self.notes[note_index].rec.middle:
+            if len(self.keys) > key_index and self.keys[key_index].rec.middle[0] < self.notes[note_index].rec.middle[0]:
                 # Here we change key
                 self.current_key = self.keys[key_index]
                 self.key_index += 1
-            if self.notes[note_index].rec.middle < self.bars[bars_index].middle:
+            if self.notes[note_index].rec.middle[0] < self.bars[bars_index].middle[0]:
                 current_notes.append(self.notes[note_index])
                 note_index += 1
             else:
                 lilypond_output += self.check_notes(current_notes)
                 bars_index += 1
                 current_notes = []
+
+        lilypond_output += self.check_notes(current_notes)
 
         lilypond_output += "}\n"
         return lilypond_output

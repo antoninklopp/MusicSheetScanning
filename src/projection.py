@@ -77,12 +77,13 @@ def create_patches(img, staffs, patch_number = 3):
     Create patches where the images will be given 
     """
     length_image = img.shape[1]
+    space_y = int(length_image/patch_number) + 1
     for beginning_staff, end_staff in staffs:
-        for i in range(0, length_image, int(length_image/patch_number)):
+        for i in range(0, length_image, space_y):
             current_patch = img[max(0, beginning_staff - int((end_staff-beginning_staff))):min(img.shape[0], end_staff + int((end_staff-beginning_staff))), \
-            i:i + int(length_image/patch_number)]
+            i:i + space_y]
             yield current_patch, max(0, beginning_staff - int((end_staff-beginning_staff))), min(img.shape[0], end_staff + int((end_staff-beginning_staff))), \
-            i, i + int(length_image/patch_number)
+            i, i + space_y
 
 def staffs_precise(img, medium_staff):
     """
@@ -169,13 +170,15 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
     instruments = [Instrument(i) for i in range(number_instruments)]
     with open("output/output_notes.txt", "w") as sheet:
         patch_number = img.shape[1]//400 + 1
-        for i, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=patch_number)):
-            staff_number = i//patch_number # Useful to check the number of instruments
+        for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=patch_number)):
+            print(index_patch, patch_number)
+            staff_number = index_patch//patch_number # Useful to check the number of instruments
             patch_clone = np.copy(patch)
             cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
             cv2.imwrite("output/output_projection.png", img_output)
             staffs_pre, correct = staffs_precise(patch, medium_staff)
             if staffs_pre is None:
+                print("NO STAFF IN THIS PATCH", begin_x, end_x, begin_y, end_y, img.shape)
                 continue
             all_staff += 1
             if correct is True:
@@ -201,18 +204,30 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
             # TODO : implement the patch by patch recognition
             print(look_for_key(patch))
             notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre])
+
+            ## Update notes and bars by changing their global height and notes
+            for n in notes:
+                n.shift_rec(begin_y, begin_x)
+
+            for b in bars:
+                b.shift(begin_y, begin_x)
+
             all_notes += notes
             all_bars += bars
             for n in notes:
-                cv2.rectangle(img_output, (int(n.rec.x + begin_y), int(n.rec.y + begin_x)), \
-                (int(n.rec.x + n.rec.w + begin_y), int(n.rec.y + n.rec.h + begin_x)), n.get_color())
+                cv2.rectangle(img_output, (int(n.rec.x), int(n.rec.y)), \
+                (int(n.rec.x + n.rec.w), int(n.rec.y + n.rec.h)), n.get_color())
                 sheet.write(n.__str__() + "\n")
+
+            for b in bars:
+                cv2.rectangle(img_output, (int(b.x), int(b.y)), \
+                (int(b.x + b.w), int(b.y + b.h)), (255, 0, 0))
 
             instruments[staff_number%number_instruments].add_notes(notes, bars)
 
-            print(notes)
+            print("patch", index_patch, patch_number, staff_number, "instrument", staff_number%number_instruments)
+
             end_patch = False
-            print(end_y, img.shape[1])
             if end_y == img.shape[1] - 1:
                 end_patch=True
                 print("fin patch")

@@ -16,6 +16,7 @@ class Note(object):
 
         self.note_int = 0
         self.find_height(staffs, key=key)
+        self.lilypond_time = ""
 
     def set_as_sharp(self):
         self.note += "#"
@@ -125,9 +126,26 @@ class Note(object):
         else:
             pitch = "'" * (self.note_height - 3)
 
-        return self.note_name[0] + pitch + str(self.sym)
+        return self.note_name[0] + pitch + str(self.sym) + self.lilypond_time
 
     def __str__(self):
         if self.note_name:
             return self.note_name + " " + self.get_name_time()
         return "UNKNOWN NOTE"
+
+    def shift_rec(self, shift_x, shift_y):
+        """
+        shit the rectangle in x and in y
+        """
+        self.rec.shift(shift_x, shift_y)
+        self.middle = self.rec.y + (self.rec.h / 2.0)
+
+    def add_time(self, value):
+        self.plus_time = value
+
+        if self.sym * value == 2:
+            self.lilypond_time = "."
+        elif self.sym * value == 3:
+            self.lilypond_time = ".."
+
+
