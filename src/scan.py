@@ -11,6 +11,7 @@ from midiutil.MidiFile import MIDIFile
 import glob
 import os
 from src.key import Key
+from src.time_indication import TimeIndication
 
 staff_files = glob.glob("resources/template/staff/*.png")
 quarter_files = glob.glob("resources/template/quarter/*.png")
@@ -172,19 +173,25 @@ def look_for_time_indication(img):
     Scanning the image to find time indications
     We need the colored image
     """
-    keys = [] 
+    time_indications = [] 
     # We get all time indications : 
     for time_indication in glob.glob("resources/template/time_indication/*"):
-        print(time_indication)
         # Here all should be folders
         if os.path.isdir(time_indication):
             time_recs = locate_images(img, [cv2.imread(i, 0) for i in glob.glob(time_indication + "/*.png")], 50, 110, 0.7)
             time_recs = merge_recs([j for i in time_recs for j in i], 0.5)
             if len(time_recs) != 0:
                 for t in time_recs:
-                    keys.append((time_indication.split("/")[-1], t))
+                    time_indications.append(TimeIndication(t, time_indication.split("/")[-1]))
+
+    if len(time_indications) > 1:
+        print("More than one time indication found")
+    elif len(time_indications) == 0:
+        time_indications = None
+    else:
+        time_indications = time_indications[0]
    
-    return keys
+    return time_indications
 
 
 def remove_note(list_where_remove, global_list):

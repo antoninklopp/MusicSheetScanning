@@ -198,13 +198,18 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
                             if img_output is not None:
                                 img_output[i + begin_x, begin_y + j] = [255, 255, 255]
 
-            # patch is now cleaned, we can do the recognition on it
+            # Find the key of this patch
             key = look_for_key(img[begin_x:end_x, begin_y:end_y])
             instruments[staff_number%number_instruments].change_key(key)
             if key is None:
                 key = instruments[staff_number%number_instruments].get_current_key()
             if key is None: # If key is still none, default is g
                 key = Key(Rectangle(0, 0, 0, 0), "g")
+
+            # Find the time indication of this patch
+            time_indication = look_for_time_indication(img[begin_x:end_x, begin_y:end_y])
+            print(time_indication)
+            instruments[staff_number%number_instruments].change_time_indication(time_indication)
 
             notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre], key)
 

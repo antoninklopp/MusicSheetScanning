@@ -1,9 +1,10 @@
 from src.key import Key
 from src.rectangle import Rectangle
+from src.time_indication import TimeIndication
 
 class Instrument:
 
-    def __init__(self, number, name="", number_times_per_bars=3, key=None):
+    def __init__(self, number, name=""):
         """
         Initializing instrument class
         """
@@ -13,7 +14,8 @@ class Instrument:
         self.bars = []
         self.current_key = None
         self.keys = []
-        self.number_times_per_bars = number_times_per_bars
+        self.current_time_indication = None
+        self.time_indications = []
 
     def change_key(self, new_key):
         """
@@ -26,6 +28,19 @@ class Instrument:
             elif (new_key.name != self.current_key.name):
                 self.current_key = new_key
                 self.keys.append(new_key)
+
+    def change_time_indication(self, new_time_indication):
+        """
+        Change the time indication of the instrument class
+        """
+        if new_time_indication is not None:
+            print(new_time_indication, self.current_time_indication)
+            if self.current_time_indication is None:
+                self.current_time_indication = new_time_indication
+                self.time_indications.append(new_time_indication)
+            elif (new_time_indication.name != self.current_time_indication.name):
+                self.current_time_indication = new_time_indication
+                self.time_indications.append(new_time_indication)
 
     def add_notes(self, notes, bars):
         """
@@ -45,14 +60,14 @@ class Instrument:
         for note in notes:
             total += 4/note.sym
 
-        if total != self.number_times_per_bars:
+        if total != self.current_time_indication.get_times():
             # print("Problem")
-            if total > self.number_times_per_bars:
+            if total > self.current_time_indication.get_times():
                 print("Too much notes, strange")
             elif len(notes) == 1:
                 notes[0].add_time(total - 4/self.notes[0].sym)
             else:
-                if self.number_times_per_bars - total == 0.5:
+                if self.current_time_indication.get_times() - total == 0.5:
                     for i in range(len(notes) - 1):
                         if notes[i].sym == 4 and notes[i + 1].sym == 8: # Looking for patterns
                             notes[i].add_time(0.5)
