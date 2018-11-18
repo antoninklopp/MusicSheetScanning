@@ -12,6 +12,7 @@ class Note(object):
     def __init__(self, rec, sym, staffs, key=Key(Rectangle(0, 0, 0, 0), "g")):
         self.rec = rec
         self.sym = sym
+        self.note_name = None
 
         self.middle = rec.y + (rec.h / 2.0)
 
@@ -19,7 +20,6 @@ class Note(object):
 
         self.find_height(staffs, key=key)
         self.lilypond_time = ""
-        self.note_name = None
 
     def set_as_sharp(self):
         self.note += "#"
@@ -30,7 +30,7 @@ class Note(object):
     def find_height(self, staffs, key):
         """
         param : staffs : A list of the five staffs on the sheet, corresponding to their average height (number should be ints)
-        TODO : Need to test this function
+        param : key : the current key of the staffs (g, f, ...)
         """
         # first we calculate the different height between staffs
         height = []

@@ -254,6 +254,7 @@ def scan_one_patch(img_gray, staffs, key=None):
 
     sorted_notes = sorted(quarter_notes + half_notes + whole_notes, key=lambda x:x.rec.x)
 
+
     # Find the sharp notes
     for sharp in sharp_recs:
         for note in sorted_notes:

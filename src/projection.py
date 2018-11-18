@@ -10,6 +10,7 @@ import numpy as np
 from src.output import reconstruct_sheet, output_instruments
 from src.instrument import Instrument  
 from src.key import Key
+from src.rectangle import Rectangle
 
 img_file = "Images/sonate-1.png"
 
@@ -52,24 +53,23 @@ def get_staffs(img):
             current_beginning = i
             in_peak = True
 
-    # plt.plot(range(0,img.shape[0]), histogram)
-
-    ## We now have to find the number of instruments thanks to the 
-    # space between staffs.
-    distance_between_staffs = []
-    for i in range(0, len(staffs)-1):
-        distance_between_staffs.append((staffs[i+1][0] + staffs[i+1][1])/2.0 - (staffs[i][0] + staffs[i][1])/2.0)
-
     number_instruments = 1
 
-    # Because the gap between two staffs should be very similar, if the mean gap is bigger than 1.05 times the first gap,
-    # we are almost sure that we have several instruments
-    if np.mean(distance_between_staffs) > 1.05 * distance_between_staffs[0]:
-        # We have several instruments
-        for i in range(0, len(distance_between_staffs)):
-            if distance_between_staffs[i] > 1.05 * distance_between_staffs[0]:
-                number_instruments = i + 1
-                break
+    if len(staffs) > 1:
+        ## We now have to find the number of instruments thanks to the 
+        # space between staffs.
+        distance_between_staffs = []
+        for i in range(0, len(staffs)-1):
+            distance_between_staffs.append((staffs[i+1][0] + staffs[i+1][1])/2.0 - (staffs[i][0] + staffs[i][1])/2.0)
+
+        # Because the gap between two staffs should be very similar, if the mean gap is bigger than 1.05 times the first gap,
+        # we are almost sure that we have several instruments
+        if np.mean(distance_between_staffs) > 1.05 * distance_between_staffs[0]:
+            # We have several instruments
+            for i in range(0, len(distance_between_staffs)):
+                if distance_between_staffs[i] > 1.05 * distance_between_staffs[0]:
+                    number_instruments = i + 1
+                    break
 
     return staffs, number_instruments
 
@@ -187,9 +187,6 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
             for index, (staff_begin, staff_end) in enumerate(staffs_pre):
                 for j in range(patch.shape[1]):
-                    # for i in range(staff_begin, staff_end + 1):
-                    #     if img_output is not None:
-                    #         img_output[i + begin_x, begin_y + j] = [255, 0, 0]
                     if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
                         or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
                         # print("Here a note")
@@ -202,12 +199,13 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
                                 img_output[i + begin_x, begin_y + j] = [255, 255, 255]
 
             # patch is now cleaned, we can do the recognition on it
-            # TODO : implement the patch by patch recognition
             key = look_for_key(img[begin_x:end_x, begin_y:end_y])
-            print("key found", key)
             instruments[staff_number%number_instruments].change_key(key)
             if key is None:
                 key = instruments[staff_number%number_instruments].get_current_key()
+            if key is None: # If key is still none, default is g
+                key = Key(Rectangle(0, 0, 0, 0), "g")
+
             notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre], key)
 
             ## Update notes and bars by changing their global height and notes
@@ -230,13 +228,10 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
 
             instruments[staff_number%number_instruments].add_notes(notes, bars)
 
-            print("patch", index_patch, patch_number, staff_number, "instrument", staff_number%number_instruments)
-
             end_patch = False
             if end_y == img.shape[1] - 1:
                 end_patch=True
                 print("fin patch")
-            # reconstruct_sheet(notes, bars, 3, end_patch=end_patch)
 
     output_instruments(instruments)
             

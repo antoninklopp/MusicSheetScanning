@@ -13,3 +13,6 @@ class Key:
         else:
             print("Not implemented")
             raise
+
+    def __str__(self):
+        return "key " + self.name
