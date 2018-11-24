@@ -48,8 +48,8 @@ quarter_lower, quarter_upper, quarter_thresh = 70, 100, 0.80
 half_lower, half_upper, half_thresh = 70, 90, 0.70
 whole_lower, whole_upper, whole_thresh = 70, 100, 0.70
 bars_lower, bars_upper, bars_thresh = 70, 100, 0.75
-doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.70
-croches_lower, croches_upper, croches_thresh = 70, 100, 0.80
+doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.85
+croches_lower, croches_upper, croches_thresh = 70, 100, 0.70
 croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 70, 100, 0.80
 key_lower, key_upper, key_thresh = 70, 100, 0.70
 
@@ -211,6 +211,55 @@ def remove_note(list_where_remove, global_list):
                         list_where_remove.remove(note1)
                         break
 
+
+def find_double_recs(img_gray):
+    """
+    Find double recs
+    """
+
+    double_total = []
+
+    for i in range(-10, 11, 2):
+        
+        double_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
+
+        for j, d in enumerate(double_imgs):
+            cols, rows = d.shape
+            rot = cv2.getRotationMatrix2D((rows/2, cols/2),i,1)
+            double_imgs[j] = cv2.warpAffine(d,rot, (rows, cols), borderValue=255)
+
+        cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
+
+        double_total += locate_images(img_gray, double_imgs, doubles_lower, doubles_upper, doubles_thresh)
+
+    doubles = merge_recs([j for i in double_total for j in i], 0.5)
+
+    return doubles
+
+def find_croche_recs(img_gray):
+    """
+    Find croche recs
+    """
+
+    croche_total = []
+
+    for i in range(-10, 11, 2):
+        
+        croche_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
+
+        for j, d in enumerate(croche_imgs):
+            cols, rows = d.shape
+            rot = cv2.getRotationMatrix2D((rows, cols),i,1)
+            croche_imgs[j] = cv2.warpAffine(d,rot, (rows, cols), borderValue=255)
+
+        # cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
+
+        croche_total += locate_images(img_gray, croche_imgs, croches_lower, croches_upper, croches_thresh)
+
+    croches = merge_recs([j for i in croche_total for j in i], 0.5)
+
+    return croches
+
 def scan_one_patch(img_gray, staffs, key=None):
     """
     Scanning one patch of the image
@@ -220,13 +269,9 @@ def scan_one_patch(img_gray, staffs, key=None):
 
     flat_recs = merge_recs([j for i in flat_recs for j in i], 0.5)
 
-    doubles_recs = locate_images(img_gray, doubles_imgs, doubles_lower, doubles_upper, doubles_thresh)
+    doubles_recs = find_double_recs(img_gray)
 
-    doubles_recs = merge_recs([j for i in doubles_recs for j in i], 0.5)
-
-    croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh) 
-
-    croches_recs = merge_recs([j for i in croches_recs for j in i], 0.5)
+    croches_recs = find_croche_recs(img_gray)
 
     croches_indiv_recs = []
 

@@ -112,7 +112,7 @@ class Note(object):
         Over the note if the note is > 5
         """
         if rec.contains_in_x(self.rec, dilatation):
-            if self.note_int < 5:
+            if self.note_int > 5:
                 if rec.middle[1] < self.rec.middle[1]:
                     print("croche", self.note_name, self.note_int, rec.middle, self.rec.middle)
                     return True
