@@ -171,7 +171,7 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
     instruments = [Instrument(i) for i in range(number_instruments)]
     with open("output/output_notes.txt", "w") as sheet:
         patch_number = img.shape[1]//400 + 1
-        for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=patch_number)):
+        for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=3)):
             print(index_patch, patch_number)
             staff_number = index_patch//patch_number # Useful to check the number of instruments
             patch_clone = np.copy(patch)

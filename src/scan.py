@@ -41,17 +41,17 @@ croches_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
 croches_indiv_imgs = [cv2.imread(croches_indiv_file, 0) for croches_indiv_file in croches_indiv_files]
 key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 
-staff_lower, staff_upper, staff_thresh = 45, 100, 0.65
-sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
-flat_lower, flat_upper, flat_thresh = 45, 100, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.70
-half_lower, half_upper, half_thresh = 70, 90, 0.60
-whole_lower, whole_upper, whole_thresh = 45, 100, 0.70
-bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
-doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.70
-croches_lower, croches_upper, croches_thresh = 45, 100, 0.80
-croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 45, 100, 0.80
-key_lower, key_upper, key_thresh = 45, 100, 0.65
+staff_lower, staff_upper, staff_thresh = 70, 100, 0.65
+sharp_lower, sharp_upper, sharp_thresh = 70, 100, 0.65
+flat_lower, flat_upper, flat_thresh = 70, 100, 0.70
+quarter_lower, quarter_upper, quarter_thresh = 70, 100, 0.80
+half_lower, half_upper, half_thresh = 70, 90, 0.70
+whole_lower, whole_upper, whole_thresh = 70, 100, 0.70
+bars_lower, bars_upper, bars_thresh = 70, 100, 0.75
+doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.70
+croches_lower, croches_upper, croches_thresh = 70, 100, 0.80
+croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 70, 100, 0.80
+key_lower, key_upper, key_thresh = 70, 100, 0.70
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -161,10 +161,14 @@ def look_for_key(img_gray):
         key_recs = merge_recs([j for i in key_recs for j in i], 0.5)
         if len(key_recs) != 0:
             key_found += 1
-            current_key = Key(key_recs[0], key.split("/")[-1][:-4])
+            current_key = Key(key_recs[0], key.split("/")[-1][:-4].split("_")[0]) # Key inpu needed : g_3.png is the third g key exemple. 
 
     if key_found > 1:
         print("More than one key found, should not happen")
+    elif key_found == 1:
+        print("KEY FOUND")
+    else:
+        print("NO KEY FOUND")
 
     return current_key
 
@@ -247,7 +251,12 @@ def scan_one_patch(img_gray, staffs, key=None):
 
     whole_recs = merge_recs([j for i in whole_recs for j in i], 0.5)
 
-    bars_recs = locate_images(img_gray, bars_imgs, bars_lower, bars_upper, bars_thresh)
+    space_staffs = staffs[-1] - staffs[0]
+    h_img = bars_imgs[0].shape[0]
+
+    bars_recs = locate_images(img_gray, bars_imgs, int((space_staffs * 1.1 / h_img)*100), int(space_staffs / h_img * 1.4 * 100), bars_thresh)
+
+    print("bars", space_staffs, bars_imgs[0].shape, int((space_staffs * 1.1 / h_img)*100), int(space_staffs / h_img * 1.4 * 100))
 
     bars_recs = merge_recs([j for i in bars_recs for j in i], 0.5)
 
@@ -284,14 +293,16 @@ def scan_one_patch(img_gray, staffs, key=None):
     # Comme certaines doubles peuvent aussi etre des croches, on passe d'abord sur les croches
     # puis on pourra potentiellement override avec des doubles.
     for t in croches_recs:
+        t.draw(img_gray, 0, 1)
         for q in quarter_notes:
             if q.is_contained_time(t, dilatation=q.rec.w/2):
                 t.draw(img_gray, 0, 1)
                 q.sym = 8
 
     for t in doubles_recs:
+        t.draw(img_gray, (150, 150, 150), 2)
         for q in quarter_notes:
-            if q.is_contained_time(t, dilatation=q.rec.w/2):
+            if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
                 t.draw(img_gray, 0, 1)
                 q.sym = 16
 
