@@ -23,9 +23,11 @@ class Instrument:
         """
         if new_key is not None:
             if self.current_key is None:
+                new_key.note_before = len(self.notes)
                 self.current_key = new_key
                 self.keys.append(new_key)
             elif (new_key.name != self.current_key.name):
+                new_key.note_before = len(self.notes)
                 self.current_key = new_key
                 self.keys.append(new_key)
 
@@ -36,9 +38,11 @@ class Instrument:
         if new_time_indication is not None:
             print(new_time_indication, self.current_time_indication)
             if self.current_time_indication is None:
+                new_time_indication.note_before = len(self.notes)
                 self.current_time_indication = new_time_indication
                 self.time_indications.append(new_time_indication)
             elif (new_time_indication.name != self.current_time_indication.name):
+                new_time_indication.note_before = len(self.notes)
                 self.current_time_indication = new_time_indication
                 self.time_indications.append(new_time_indication)
 
@@ -105,13 +109,34 @@ class Instrument:
         note_index = 0
         bars_index = 0
         key_index = 1
+        time_index = 1
         current_notes = []
 
+        print("nombres de clés différentes", len(self.keys))
+        print("nombre de changement de mesures", self.time_indications)
+
         while note_index < len(self.notes) and bars_index < len(self.bars):
-            if len(self.keys) > key_index and self.keys[key_index].rec.middle[0] < self.notes[note_index].rec.middle[0]:
+            if len(self.keys) > key_index and note_index > self.keys[key_index].note_before \
+                and self.keys[key_index].rec.middle[0] < self.notes[note_index].rec.middle[0]:
+                # We first flush the output
+                # Then we can change key
+                lilypond_output += self.check_notes(current_notes)
+                bars_index += 1
+                current_notes = []
                 # Here we change key
                 self.current_key = self.keys[key_index]
-                self.key_index += 1
+                key_index += 1
+            if len(self.time_indications) > time_index and note_index > self.time_indications[time_index].note_before \
+                and self.time_indications[time_index].rec.middle[0] < self.notes[note_index].rec.middle[0]:
+                # We first flush the output. 
+                # Then we can change time indication
+                lilypond_output += self.check_notes(current_notes)
+                lilypond_output += self.time_indications[time_index].get_lilypond_output()
+                print("NEW TIME INDICATION \n\n\n")
+                bars_index += 1
+                current_notes = []
+                self.current_time_indication = self.time_indications[time_index]
+                time_index += 1
             if self.notes[note_index].rec.middle[0] < self.bars[bars_index].middle[0]:
                 current_notes.append(self.notes[note_index])
                 note_index += 1

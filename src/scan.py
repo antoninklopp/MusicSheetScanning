@@ -48,8 +48,8 @@ quarter_lower, quarter_upper, quarter_thresh = 70, 100, 0.80
 half_lower, half_upper, half_thresh = 70, 90, 0.70
 whole_lower, whole_upper, whole_thresh = 70, 100, 0.70
 bars_lower, bars_upper, bars_thresh = 70, 100, 0.75
-doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.85
-croches_lower, croches_upper, croches_thresh = 70, 100, 0.70
+doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.75
+croches_lower, croches_upper, croches_thresh = 80, 100, 0.80
 croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 70, 100, 0.80
 key_lower, key_upper, key_thresh = 70, 100, 0.70
 
@@ -219,7 +219,7 @@ def find_double_recs(img_gray):
 
     double_total = []
 
-    for i in range(-10, 11, 2):
+    for i in range(-16, 17, 2):
         
         double_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
 
@@ -228,7 +228,7 @@ def find_double_recs(img_gray):
             rot = cv2.getRotationMatrix2D((rows/2, cols/2),i,1)
             double_imgs[j] = cv2.warpAffine(d,rot, (rows, cols), borderValue=255)
 
-        cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
+        # cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
 
         double_total += locate_images(img_gray, double_imgs, doubles_lower, doubles_upper, doubles_thresh)
 
@@ -243,18 +243,18 @@ def find_croche_recs(img_gray):
 
     croche_total = []
 
-    for i in range(-10, 11, 2):
+    # for i in range(-16, 17, 2):
         
-        croche_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
+    croche_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
 
-        for j, d in enumerate(croche_imgs):
-            cols, rows = d.shape
-            rot = cv2.getRotationMatrix2D((rows, cols),i,1)
-            croche_imgs[j] = cv2.warpAffine(d,rot, (rows, cols), borderValue=255)
+    #     for j, d in enumerate(croche_imgs):
+    #         cols, rows = d.shape
+    #         rot = cv2.getRotationMatrix2D((rows, cols),i,1)
+    #         croche_imgs[j] = cv2.warpAffine(d,rot, (rows, cols), borderValue=255)
 
         # cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
 
-        croche_total += locate_images(img_gray, croche_imgs, croches_lower, croches_upper, croches_thresh)
+    croche_total += locate_images(img_gray, croche_imgs, croches_lower, croches_upper, croches_thresh)
 
     croches = merge_recs([j for i in croche_total for j in i], 0.5)
 
@@ -341,7 +341,7 @@ def scan_one_patch(img_gray, staffs, key=None):
         t.draw(img_gray, 0, 1)
         for q in quarter_notes:
             if q.is_contained_time(t, dilatation=q.rec.w/2):
-                t.draw(img_gray, 0, 1)
+                # t.draw(img_gray, 0, 1)
                 q.sym = 8
 
     for t in doubles_recs:
@@ -355,7 +355,7 @@ def scan_one_patch(img_gray, staffs, key=None):
     for t in croches_indiv_recs:
         for q in quarter_notes:
             if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
-                t.draw(img_gray, 0, 1)
+                # t.draw(img_gray, 0, 1)
                 q.sym = 8
 
 

@@ -4,6 +4,7 @@ class Key:
         self.rec = rec
         self.name = name
         self.middle = rec.y + (rec.h / 2.0)
+        self.note_before = 0
 
     def get_lilypond_output(self):
         if self.name == "g":
@@ -16,3 +17,6 @@ class Key:
 
     def __str__(self):
         return "key " + self.name
+
+    def note_before(self, number):
+        self.note_before = number
