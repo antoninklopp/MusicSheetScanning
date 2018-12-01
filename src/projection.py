@@ -105,7 +105,7 @@ def staffs_precise(img, medium_staff):
     number_staffs = 0
 
     for i in range(histogram.shape[0]):
-        if histogram[i] > max_heights/1.2:
+        if histogram[i] > max_heights/1.5:
             histogram[i] = max_heights
             if (histogram[i-1]) == 0:
                 number_staffs += 1
@@ -122,6 +122,8 @@ def staffs_precise(img, medium_staff):
         if histogram[i] == max_heights and (in_peak is False):
             current_beginning = i
             in_peak = True
+
+    print(staffs)
     
     if len(staffs) != 5:
 
@@ -135,6 +137,8 @@ def staffs_precise(img, medium_staff):
             height_staff = []
             for i in range(1, len(medium_staff) - 1):
                 height_staff.append((medium_staff[i+1][0] - medium_staff[i][0])/medium_staff[0])
+        else:
+            return None, None
         normal_staff = 1
         current_staff = 0
         print(staffs, medium_staff)
@@ -185,18 +189,9 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
             if correct is True:
                 correct_staff += 1
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
-            for index, (staff_begin, staff_end) in enumerate(staffs_pre):
-                for j in range(patch.shape[1]):
-                    if (sum(patch[staff_begin-3: int((staff_begin + staff_end)/2), j]) == 0) \
-                        or (sum(patch[int((staff_begin + staff_end)/2):staff_end+3, j]) == 0):
-                        # print("Here a note")
-                        pass
-                    else:
-                        for i in range(staff_begin - 2, staff_end+3):
-                            # print("ERASE")
-                            patch[i, j] = 255
-                            if img_output is not None:
-                                img_output[i + begin_x, begin_y + j] = [255, 255, 255]
+            
+            space_between_staff = int(sum([i[1] - i[0] for i in staffs_pre])/4)
+            print(space_between_staff)
 
             # Find the key of this patch
             key = look_for_key(img[begin_x:end_x, begin_y:end_y])
@@ -205,11 +200,25 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
                 key = instruments[staff_number%number_instruments].get_current_key()
             if key is None: # If key is still none, default is g
                 key = Key(Rectangle(0, 0, 0, 0), "g")
+                print("default key")
 
             # Find the time indication of this patch
             time_indication = look_for_time_indication(img[begin_x:end_x, begin_y:end_y])
             print(time_indication)
             instruments[staff_number%number_instruments].change_time_indication(time_indication)
+
+            for index, (staff_begin, staff_end) in enumerate(staffs_pre):
+                for j in range(patch.shape[1]):
+                    if (sum(patch[staff_begin-space_between_staff: int((staff_begin + staff_end)/2), j]) == 0) \
+                        or (sum(patch[int((staff_begin + staff_end)/2):staff_end+space_between_staff, j]) == 0):
+                        # print("Here a note")
+                        pass
+                    else:
+                        for i in range(staff_begin - 1, staff_end+2):
+                            # print("ERASE")
+                            patch[i, j] = 255
+                            if img_output is not None:
+                                img_output[i + begin_x, begin_y + j] = [255, 255, 255]
 
             notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre], key)
 

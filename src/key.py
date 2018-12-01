@@ -11,8 +11,10 @@ class Key:
             return "\\clef treble"
         elif self.name == "f":
             return "\\clef bass"
+        elif self.name == "c3":
+            return "\\clef alto"
         else:
-            print("Not implemented")
+            print("Not implemented", self.name)
             raise
 
     def __str__(self):

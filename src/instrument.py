@@ -104,7 +104,10 @@ class Instrument:
             print("KEY", self.keys[0].name)
             lilypond_output += self.keys[0].get_lilypond_output() + "\n"
 
-        lilypond_output += "\\time 3/4\n"
+        if len(self.time_indications) == 0:
+            self.time_indications.append(TimeIndication(Rectangle(0, 0, 0, 0), "4_4"))
+            lilypond_output += self.time_indications[0].get_lilypond_output() + "\n"
+            self.current_time_indication = self.time_indications[0]
 
         note_index = 0
         bars_index = 0

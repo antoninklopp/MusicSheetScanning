@@ -66,8 +66,10 @@ class Note(object):
             note_int = int(round(note_int))
         elif key.name == "f":
             note_int = int(round(note_int)) + 12
+        elif key.name == "c3":
+            note_int = int(round(note_int)) - 1
         else:
-            print("Error, key unknown, not implemented")
+            print("Error, key unknown, not implemented", key.name)
             return None
         note_name = note_names[note_int % 7]
         note_height = 5 - note_int // 7

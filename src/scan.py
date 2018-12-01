@@ -44,14 +44,14 @@ key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 staff_lower, staff_upper, staff_thresh = 70, 100, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 70, 100, 0.65
 flat_lower, flat_upper, flat_thresh = 70, 100, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 70, 100, 0.80
+quarter_lower, quarter_upper, quarter_thresh = 40, 100, 0.80
 half_lower, half_upper, half_thresh = 70, 90, 0.70
 whole_lower, whole_upper, whole_thresh = 70, 100, 0.70
 bars_lower, bars_upper, bars_thresh = 70, 100, 0.75
 doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.75
 croches_lower, croches_upper, croches_thresh = 80, 100, 0.80
 croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 70, 100, 0.80
-key_lower, key_upper, key_thresh = 70, 100, 0.70
+key_lower, key_upper, key_thresh = 40, 100, 0.70
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -190,6 +190,7 @@ def look_for_time_indication(img):
 
     if len(time_indications) > 1:
         print("More than one time indication found")
+        time_indications = time_indications[0]
     elif len(time_indications) == 0:
         time_indications = None
     else:
