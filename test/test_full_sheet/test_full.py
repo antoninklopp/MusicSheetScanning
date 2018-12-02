@@ -8,9 +8,8 @@ class TestFull:
     def test_full_sheet(self):
         img_file = "Images/quatuor.jpg"
         img = cv2.imread(img_file, 0)
-        time_indication = look_for_time_indication(img)
         staffs, number_instrument = get_staffs(img)
-        process_patches(img, staffs, cv2.imread(img_file), time_indication, number_instrument)
+        process_patches(img, staffs, cv2.imread(img_file), img_file, number_instrument)
         print("Creating pdf file ....")
         os.system("lilypond output/sheet_reconstructed.ly")
         print("Created")

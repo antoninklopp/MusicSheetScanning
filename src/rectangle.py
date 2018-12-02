@@ -29,7 +29,7 @@ class Rectangle(object):
         h = max(self.y + self.h, other.y + other.h) - y
         return Rectangle(x, y, w, h)
 
-    def draw(self, img, color, thickness):
+    def draw(self, img, color, thickness=2):
         pos = ((int)(self.x), (int)(self.y))
         size = ((int)(self.x + self.w), (int)(self.y + self.h))
         cv2.rectangle(img, pos, size, color, thickness)

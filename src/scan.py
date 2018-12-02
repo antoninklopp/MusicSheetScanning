@@ -44,14 +44,14 @@ key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 staff_lower, staff_upper, staff_thresh = 70, 100, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 70, 100, 0.65
 flat_lower, flat_upper, flat_thresh = 70, 100, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 40, 100, 0.80
+quarter_lower, quarter_upper, quarter_thresh = 40, 100, 0.70
 half_lower, half_upper, half_thresh = 70, 90, 0.70
 whole_lower, whole_upper, whole_thresh = 70, 100, 0.70
 bars_lower, bars_upper, bars_thresh = 70, 100, 0.75
 doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.75
 croches_lower, croches_upper, croches_thresh = 80, 100, 0.80
 croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 70, 100, 0.80
-key_lower, key_upper, key_thresh = 40, 100, 0.70
+key_lower, key_upper, key_thresh = 40, 100, 0.75
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -132,6 +132,8 @@ def threshold_image(img, thresh=200):
             else:
                 img[i, j] = 255
 
+    cv2.imwrite("output/thresholded_image.png", img)
+
     return img
 
 def inverse_image(img):
@@ -149,6 +151,16 @@ def inverse_image(img):
 
     return img
 
+def clear_img_rec(img, rec):
+    """
+    Clear the image from certain recs
+    """
+    rec.draw(img, 155)
+    for j in range(int(rec.x), int(rec.x + rec.w)):
+        for i in range(int(rec.y), int(rec.y + rec.h)):
+            img[i, j] = 255
+
+
 def look_for_key(img_gray):
     """
     Scanning for a key in the file
@@ -162,6 +174,7 @@ def look_for_key(img_gray):
         if len(key_recs) != 0:
             key_found += 1
             current_key = Key(key_recs[0], key.split("/")[-1][:-4].split("_")[0]) # Key inpu needed : g_3.png is the third g key exemple. 
+            clear_img_rec(img_gray, key_recs[0])
 
     if key_found > 1:
         print("More than one key found, should not happen")
@@ -195,6 +208,9 @@ def look_for_time_indication(img):
         time_indications = None
     else:
         time_indications = time_indications[0]
+
+    if time_indications is not None:
+        clear_img_rec(img, time_indications.rec)
    
     return time_indications
 

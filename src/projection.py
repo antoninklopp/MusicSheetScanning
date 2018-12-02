@@ -25,7 +25,7 @@ def get_staffs(img):
     """
 
     ## First we find all the staffs
-    img = threshold_image(img, 200)
+    img = threshold_image(img, 230)
 
     histogram = np.zeros((img.shape[0]))
 
@@ -105,7 +105,7 @@ def staffs_precise(img, medium_staff):
     number_staffs = 0
 
     for i in range(histogram.shape[0]):
-        if histogram[i] > max_heights/1.5:
+        if histogram[i] > max_heights/1.2:
             histogram[i] = max_heights
             if (histogram[i-1]) == 0:
                 number_staffs += 1
@@ -163,7 +163,7 @@ def staffs_precise(img, medium_staff):
 
     return staffs, len(staffs) == 5
 
-def process_patches(img, staffs, img_output, time_indication=None, number_instruments=1):
+def process_patches(img, staffs, img_output, img_file, number_instruments=1):
     """
     Process all the patches and extract the notes
     """
@@ -173,14 +173,16 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
     all_notes = []
     all_bars = []
     instruments = [Instrument(i) for i in range(number_instruments)]
+    img_clean_gray = cv2.imread(img_file, 0)
     with open("output/output_notes.txt", "w") as sheet:
-        patch_number = img.shape[1]//400 + 1
-        for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=3)):
+        patch_number = 3
+        for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=patch_number)):
             print(index_patch, patch_number)
             staff_number = index_patch//patch_number # Useful to check the number of instruments
             patch_clone = np.copy(patch)
             cv2.rectangle(img_output, (begin_y, begin_x), (end_y, end_x), (255, 0, 0))
             cv2.imwrite("output/output_projection.png", img_output)
+            cv2.imwrite("output/gray.png", img)
             staffs_pre, correct = staffs_precise(patch, medium_staff)
             if staffs_pre is None:
                 print("NO STAFF IN THIS PATCH", begin_x, end_x, begin_y, end_y, img.shape)
@@ -194,7 +196,7 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
             print(space_between_staff)
 
             # Find the key of this patch
-            key = look_for_key(img[begin_x:end_x, begin_y:end_y])
+            key = look_for_key(img_clean_gray[begin_x:end_x, begin_y:end_y])
             instruments[staff_number%number_instruments].change_key(key)
             if key is None:
                 key = instruments[staff_number%number_instruments].get_current_key()
@@ -203,7 +205,7 @@ def process_patches(img, staffs, img_output, time_indication=None, number_instru
                 print("default key")
 
             # Find the time indication of this patch
-            time_indication = look_for_time_indication(img[begin_x:end_x, begin_y:end_y])
+            time_indication = look_for_time_indication(img_clean_gray[begin_x:end_x, begin_y:end_y])
             print(time_indication)
             instruments[staff_number%number_instruments].change_time_indication(time_indication)
 

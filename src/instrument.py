@@ -21,7 +21,9 @@ class Instrument:
         """
         Change key during instrument class
         """
+
         if new_key is not None:
+            print("Key of ", self.number, "intrument is ", new_key.name)
             if self.current_key is None:
                 new_key.note_before = len(self.notes)
                 self.current_key = new_key
