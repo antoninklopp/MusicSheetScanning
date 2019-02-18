@@ -5,12 +5,13 @@ try:
 except ImportError:
     matplotlib.use('agg')
 import matplotlib.pyplot as plt
-from src.scan import threshold_image, scan_one_patch, look_for_key, look_for_time_indication
+from src.scan import threshold_image, scan_one_patch, look_for_key, look_for_time_indication, inverse_image
 import numpy as np
 from src.output import reconstruct_sheet, output_instruments
 from src.instrument import Instrument  
 from src.key import Key
 from src.rectangle import Rectangle
+from src.segmentation import segmentate
 
 img_file = "Images/sonate-1.png"
 
@@ -25,7 +26,7 @@ def get_staffs(img):
     """
 
     ## First we find all the staffs
-    img = threshold_image(img, 230)
+    img = threshold_image(img, 200) # TODO :  Find a good threshold value here
 
     histogram = np.zeros((img.shape[0]))
 
@@ -167,6 +168,7 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
     """
     Process all the patches and extract the notes
     """
+    global_index_segmentation = 0
     correct_staff = 0
     all_staff = 0
     medium_staff = [0, [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
@@ -192,7 +194,7 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
                 correct_staff += 1
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
             
-            space_between_staff = int(sum([i[1] - i[0] for i in staffs_pre])/4)
+            space_between_staff = 4 # int(sum([i[1] - i[0] for i in staffs_pre])/4)
             print(space_between_staff)
 
             # Find the key of this patch
@@ -216,11 +218,40 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
                         # print("Here a note")
                         pass
                     else:
-                        for i in range(staff_begin - 1, staff_end+2):
+                        for i in range(staff_begin - 3, staff_end+4):
                             # print("ERASE")
                             patch[i, j] = 255
                             if img_output is not None:
                                 img_output[i + begin_x, begin_y + j] = [255, 255, 255]
+
+            inverted_image = np.copy(inverse_image(patch))
+
+            ## APPLY MORPHOLOGICAL FILTERS
+            from skimage.morphology import closing, square
+            from skimage.measure import label
+            selem = square(4)
+            inverted_image = closing(inverted_image, selem)
+
+            # for i in range(patch.shape[0]):
+            #     for j in range(patch.shape[1]):
+            #         if patch[i, j] != inverted_image[i, j]:
+            #             print("CLOSING VALUE DIFFERENT")
+
+            patch_closed = inverse_image(inverted_image)
+            patch_closed = label(patch_closed)
+
+            cv2.imwrite("segmentation/img_no_closing" + str(global_index_segmentation) + ".png", inverted_image)
+            cv2.imwrite("segmentation/img_closing "  + str(global_index_segmentation) + ".png", patch)
+
+            size_of_staff = staffs_pre[-1][1] - staffs_pre[0][0]
+
+            list_segmentation = segmentate(patch_closed, staffs_pre[0][0], staffs_pre[-1][1])
+            print("LIST SEGMENTATION", len(list_segmentation))
+            for s in list_segmentation:
+                cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", s)
+                global_index_segmentation += 1
+
+            cv2.imwrite("segmentation/patch" + str(global_index_segmentation) + ".png", patch)
 
             notes, bars = scan_one_patch(patch, [(staff_begin + staff_end)//2 for staff_begin, staff_end in staffs_pre], key)
 

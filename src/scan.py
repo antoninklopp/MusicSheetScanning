@@ -44,7 +44,7 @@ key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 staff_lower, staff_upper, staff_thresh = 70, 100, 0.65
 sharp_lower, sharp_upper, sharp_thresh = 70, 100, 0.65
 flat_lower, flat_upper, flat_thresh = 70, 100, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 40, 100, 0.70
+quarter_lower, quarter_upper, quarter_thresh = 40, 100, 0.80
 half_lower, half_upper, half_thresh = 70, 90, 0.70
 whole_lower, whole_upper, whole_thresh = 70, 100, 0.70
 bars_lower, bars_upper, bars_thresh = 70, 100, 0.75
@@ -144,7 +144,7 @@ def inverse_image(img):
     """
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            if img[i, j] == 255:
+            if img[i, j] > 255/2.0:
                 img[i, j] = 0
             else:
                 img[i, j] = 255
@@ -264,10 +264,15 @@ def find_croche_recs(img_gray):
         
     croche_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
 
-    #     for j, d in enumerate(croche_imgs):
-    #         cols, rows = d.shape
-    #         rot = cv2.getRotationMatrix2D((rows, cols),i,1)
-    #         croche_imgs[j] = cv2.warpAffine(d,rot, (rows, cols), borderValue=255)
+    # for j, d in enumerate(croche_imgs):
+    #     cols, rows = d.shape
+    #     print("shape", croche_imgs[j].shape)
+    #     #rot = cv2.getRotationMatrix2D((rows, cols),i,1)
+    #     # croche_imgs[j] = cv2.imread(croches_file[j], 0)# cv2.warpAffine(d,rot, (rows, cols), borderValue=np.NaN)
+    #     for x in range(croche_imgs[j].shape[0]):
+    #         for y in range(croche_imgs[j].shape[1]):
+    #             if croches_imgs[j][x, y] == 0:
+    #                 croches_imgs[j][x, y] = np.NaN
 
         # cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
 

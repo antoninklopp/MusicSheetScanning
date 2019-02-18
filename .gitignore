@@ -98,3 +98,4 @@ resources/template/created/*
 *.txt
 *.ly
 *.pdf
+segmentation/*

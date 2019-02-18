@@ -6,7 +6,7 @@ import os
 class TestFull:
 
     def test_full_sheet(self):
-        img_file = "Images/quatuor.jpg"
+        img_file = "Images/sonate-1_part.png"
         img = cv2.imread(img_file, 0)
         staffs, number_instrument = get_staffs(img)
         process_patches(img, staffs, cv2.imread(img_file), img_file, number_instrument)
