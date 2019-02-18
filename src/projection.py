@@ -226,7 +226,7 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
             print("staff pre", staffs_pre)
             assert(len(staffs_pre) == 5)
 
-            space_between_staff = max(sum([i[1] - i[0] for i in staffs_pre])//4, 2)
+            space_between_staff = max(sum([i[1] - i[0] for i in staffs_pre])//4, 3)
 
             print(space_between_staff)
 
@@ -251,7 +251,7 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
                         # print("Here a note")
                         pass
                     else:
-                        for i in range(staff_begin - space_between_staff//2 - 1, staff_end+space_between_staff//2 + 1):
+                        for i in range(staff_begin - space_between_staff, staff_end+space_between_staff):
                             # print("ERASE")
                             patch[i, j] = 255
                             if img_output is not None:
@@ -260,10 +260,10 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
             inverted_image = inverse_image(np.copy(patch))
 
             # ## APPLY MORPHOLOGICAL FILTERS
-            # from skimage.morphology import closing, square
+            from skimage.morphology import closing, square
             from skimage.measure import label
-            # selem = square(3)
-            # inverted_image = closing(inverted_image, selem)
+            selem = square(3)
+            inverted_image = closing(inverted_image, selem)
 
             patch_closed = label(inverted_image)
 
@@ -277,11 +277,11 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
             list_segmentation = segmentate(patch_closed, staffs_pre[0][0], staffs_pre[-1][1])
             print("LIST SEGMENTATION", len(list_segmentation))
             for minr, minc, maxr, maxc in list_segmentation:
-                if (maxr - minr) <= 60 and (maxc - minc) <= 60:
+                if (maxr - minr) <= 64 and (maxc - minc) <= 64:
                     p = patch[max(0, minr-2):min(patch.shape[0], maxr+2), \
                         max(0, minc-2):min(maxc+2, patch.shape[1])]
                     cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", \
-                        imresize(p, (60, 60)))
+                        imresize(p, (64, 64)))
                 else:
                     cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", \
                         patch[max(0, minr-1):min(maxr+1, patch.shape[0]), max(0, minc-1):min(maxc, patch.shape[1])])
