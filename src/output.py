@@ -46,8 +46,6 @@ def reconstruct_sheet(notes, bars, number_times_per_bars=4, end_patch=False):
         if end_patch is True:
             f.write("\\bar \"\" \\break\n")
 
-    print("OK")
-
 def get_header():
     return "\\header { \n" +\
         "title = \"Reconstructed sheet\" \n"+\

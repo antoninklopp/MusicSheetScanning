@@ -176,12 +176,12 @@ def look_for_key(img_gray):
             current_key = Key(key_recs[0], key.split("/")[-1][:-4].split("_")[0]) # Key inpu needed : g_3.png is the third g key exemple. 
             clear_img_rec(img_gray, key_recs[0])
 
-    if key_found > 1:
-        print("More than one key found, should not happen")
-    elif key_found == 1:
-        print("KEY FOUND")
-    else:
-        print("NO KEY FOUND")
+    # if key_found > 1:
+    #     print("More than one key found, should not happen")
+    # elif key_found == 1:
+    #     print("KEY FOUND")
+    # else:
+    #     print("NO KEY FOUND")
 
     return current_key
 

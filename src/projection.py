@@ -26,7 +26,6 @@ def get_staffs(img):
     """
 
     ## First we find all the staffs
-    img = threshold_image(img, 200) # TODO :  Find a good threshold value here
 
     histogram = np.zeros((img.shape[0]))
 
@@ -177,7 +176,7 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
     instruments = [Instrument(i) for i in range(number_instruments)]
     img_clean_gray = cv2.imread(img_file, 0)
     with open("output/output_notes.txt", "w") as sheet:
-        patch_number = 3
+        patch_number = 5
         for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=patch_number)):
             print(index_patch, patch_number)
             staff_number = index_patch//patch_number # Useful to check the number of instruments
@@ -194,7 +193,10 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
                 correct_staff += 1
                 medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
             
-            space_between_staff = 4 # int(sum([i[1] - i[0] for i in staffs_pre])/4)
+            assert(len(staffs_pre) == 5)
+
+            space_between_staff = sum([i[1] - i[0] for i in staffs_pre])//4
+
             print(space_between_staff)
 
             # Find the key of this patch
@@ -218,27 +220,21 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
                         # print("Here a note")
                         pass
                     else:
-                        for i in range(staff_begin - 3, staff_end+4):
+                        for i in range(staff_begin - space_between_staff//2 - 1, staff_end+space_between_staff + 1):
                             # print("ERASE")
                             patch[i, j] = 255
                             if img_output is not None:
                                 img_output[i + begin_x, begin_y + j] = [255, 255, 255]
 
-            inverted_image = np.copy(inverse_image(patch))
+            inverted_image = inverse_image(np.copy(patch))
 
             ## APPLY MORPHOLOGICAL FILTERS
             from skimage.morphology import closing, square
             from skimage.measure import label
-            selem = square(4)
+            selem = square(3)
             inverted_image = closing(inverted_image, selem)
 
-            # for i in range(patch.shape[0]):
-            #     for j in range(patch.shape[1]):
-            #         if patch[i, j] != inverted_image[i, j]:
-            #             print("CLOSING VALUE DIFFERENT")
-
-            patch_closed = inverse_image(inverted_image)
-            patch_closed = label(patch_closed)
+            patch_closed = label(inverted_image)
 
             cv2.imwrite("segmentation/img_no_closing" + str(global_index_segmentation) + ".png", inverted_image)
             cv2.imwrite("segmentation/img_closing "  + str(global_index_segmentation) + ".png", patch)
@@ -247,8 +243,9 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
 
             list_segmentation = segmentate(patch_closed, staffs_pre[0][0], staffs_pre[-1][1])
             print("LIST SEGMENTATION", len(list_segmentation))
-            for s in list_segmentation:
-                cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", s)
+            for minr, minc, maxr, maxc in list_segmentation:
+                cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", \
+                    patch[max(0, minr-1):min(maxr+1, patch.shape[0]), max(0, minc-1):min(maxc, patch.shape[1])])
                 global_index_segmentation += 1
 
             cv2.imwrite("segmentation/patch" + str(global_index_segmentation) + ".png", patch)
@@ -287,11 +284,42 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
     print("correct staff number", (correct_staff/all_staff) * 100 , "%")
     return all_notes
 
+def remove_white_around(img_file):
+    i = 0
+    while np.sum(img_file[i, :]) > (img_file.shape[0]*9.0/10) * 255:
+        img_file = img_file[1:img_file.shape[0], :]
+        print("REMOVES")
+        i += 1
+
+    i = img_file.shape[0] - 1
+    while np.sum(img_file[i, :]) > (img_file.shape[0]*9.0/10) * 255:
+        img_file = img_file[0:img_file.shape[0] - 1, :]
+        print("REMOVES")
+        i -= 1
+
+    j = 0
+    while np.sum(img_file[:, j]) > (img_file.shape[0]*9.0/10) * 255:
+        img_file = img_file[:, 1:img_file.shape[1]]
+        print("REMOVES")
+        j += 1
+
+    j = img_file.shape[1] - 1
+    while np.sum(img_file[:, j]) > (img_file.shape[0]*9.0/10) * 255: #(img_file.shape[1]-2) * 255:
+        img_file = img_file[:, 0:img_file.shape[1] - 1]
+        print("REMOVES")
+        j -= 1
+
+    return img_file
+
 def get_cleaned_sheet(img_file):
     """
     Get the sheet without the staffs
     """
     img = cv2.imread(img_file, 0)
-    img_with_staffs = cv2.imread(img_file)
-    staffs = get_staffs(img)
-    return process_patches(img, staffs, img_with_staffs)
+    print("shape before", img.shape)
+    img = threshold_image(img, 200) # TODO :  Find a good threshold value here
+    img = remove_white_around(img)
+    print("shape after", img.shape)
+    staffs, number_instrument = get_staffs(img)
+    return process_patches(img, staffs, cv2.imread(img_file), img_file, number_instrument)
+    
