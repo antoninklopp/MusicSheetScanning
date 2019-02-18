@@ -259,11 +259,11 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
 
             inverted_image = inverse_image(np.copy(patch))
 
-            ## APPLY MORPHOLOGICAL FILTERS
-            from skimage.morphology import closing, square
+            # ## APPLY MORPHOLOGICAL FILTERS
+            # from skimage.morphology import closing, square
             from skimage.measure import label
-            selem = square(3)
-            inverted_image = closing(inverted_image, selem)
+            # selem = square(3)
+            # inverted_image = closing(inverted_image, selem)
 
             patch_closed = label(inverted_image)
 
@@ -272,11 +272,19 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
 
             size_of_staff = staffs_pre[-1][1] - staffs_pre[0][0]
 
+            from scipy.misc import imresize
+
             list_segmentation = segmentate(patch_closed, staffs_pre[0][0], staffs_pre[-1][1])
             print("LIST SEGMENTATION", len(list_segmentation))
             for minr, minc, maxr, maxc in list_segmentation:
-                cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", \
-                    patch[max(0, minr-1):min(maxr+1, patch.shape[0]), max(0, minc-1):min(maxc, patch.shape[1])])
+                if (maxr - minr) <= 60 and (maxc - minc) <= 60:
+                    p = patch[max(0, minr-2):min(patch.shape[0], maxr+2), \
+                        max(0, minc-2):min(maxc+2, patch.shape[1])]
+                    cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", \
+                        imresize(p, (60, 60)))
+                else:
+                    cv2.imwrite("segmentation/" + str(global_index_segmentation) + ".png", \
+                        patch[max(0, minr-1):min(maxr+1, patch.shape[0]), max(0, minc-1):min(maxc, patch.shape[1])])
                 global_index_segmentation += 1
 
             cv2.imwrite("segmentation/patch" + str(global_index_segmentation) + ".png", patch)
