@@ -29,7 +29,7 @@ class Rectangle(object):
         h = max(self.y + self.h, other.y + other.h) - y
         return Rectangle(x, y, w, h)
 
-    def draw(self, img, color, thickness):
+    def draw(self, img, color, thickness=2):
         pos = ((int)(self.x), (int)(self.y))
         size = ((int)(self.x + self.w), (int)(self.y + self.h))
         cv2.rectangle(img, pos, size, color, thickness)
@@ -38,6 +38,11 @@ class Rectangle(object):
         if (self.x - dilatation < other.x) and (other.x + other.w < self.x + self.w + dilatation):
             return True
         return False
+
+    def shift(self, shift_x, shift_y):
+        self.x += shift_x
+        self.y += shift_y
+        self.middle = self.x + self.w/2, self.y + self.h/2
 
     def __str__(self):
         return "x : " + str(self.x) + " y : " + str(self.y) + " w : " + str(self.w) + " h : " + str(self.h)

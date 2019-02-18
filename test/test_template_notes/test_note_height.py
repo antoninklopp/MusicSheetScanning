@@ -12,7 +12,7 @@ class TestHeight:
 
     def one_note(self, image):
         img = cv2.imread(image, 0)
-        staffs = get_staffs(img)
+        staffs, number_instruments = get_staffs(img)
         img_output = cv2.imread(image)
         notes = process_patches(img, staffs, img_output)
         if len(notes) != 1:

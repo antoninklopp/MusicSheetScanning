@@ -2,3 +2,4 @@ numpy==1.15.3
 opencv-python==3.4.3.18
 midiutil==1.2.1
 matplotlib==3.0.1
+codecov==2.0.15

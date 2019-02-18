@@ -10,6 +10,8 @@ from random import randint
 from midiutil.MidiFile import MIDIFile
 import glob
 import os
+from src.key import Key
+from src.time_indication import TimeIndication
 
 staff_files = glob.glob("resources/template/staff/*.png")
 quarter_files = glob.glob("resources/template/quarter/*.png")
@@ -39,17 +41,17 @@ croches_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
 croches_indiv_imgs = [cv2.imread(croches_indiv_file, 0) for croches_indiv_file in croches_indiv_files]
 key_imgs = [cv2.imread(key_file, 0) for key_file in key_files]
 
-staff_lower, staff_upper, staff_thresh = 45, 100, 0.65
-sharp_lower, sharp_upper, sharp_thresh = 45, 100, 0.65
-flat_lower, flat_upper, flat_thresh = 45, 100, 0.70
-quarter_lower, quarter_upper, quarter_thresh = 45, 100, 0.70
-half_lower, half_upper, half_thresh = 70, 90, 0.60
-whole_lower, whole_upper, whole_thresh = 45, 100, 0.70
-bars_lower, bars_upper, bars_thresh = 45, 100, 0.80
-doubles_lower, doubles_upper, doubles_thresh = 45, 100, 0.70
-croches_lower, croches_upper, croches_thresh = 45, 100, 0.80
-croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 45, 100, 0.80
-key_lower, key_upper, key_thresh = 45, 100, 0.65
+staff_lower, staff_upper, staff_thresh = 70, 100, 0.65
+sharp_lower, sharp_upper, sharp_thresh = 70, 100, 0.65
+flat_lower, flat_upper, flat_thresh = 70, 100, 0.70
+quarter_lower, quarter_upper, quarter_thresh = 40, 100, 0.80
+half_lower, half_upper, half_thresh = 70, 90, 0.70
+whole_lower, whole_upper, whole_thresh = 70, 100, 0.70
+bars_lower, bars_upper, bars_thresh = 70, 100, 0.75
+doubles_lower, doubles_upper, doubles_thresh = 70, 100, 0.75
+croches_lower, croches_upper, croches_thresh = 80, 100, 0.80
+croches_indiv_lower, croches_indiv_upper, croches_indiv_thresh = 70, 100, 0.80
+key_lower, key_upper, key_thresh = 40, 100, 0.75
 
 
 def locate_images(img, templates, start, stop, threshold):
@@ -130,6 +132,8 @@ def threshold_image(img, thresh=200):
             else:
                 img[i, j] = 255
 
+    cv2.imwrite("output/thresholded_image.png", img)
+
     return img
 
 def inverse_image(img):
@@ -140,12 +144,22 @@ def inverse_image(img):
     """
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            if img[i, j] == 255:
+            if img[i, j] > 255/2.0:
                 img[i, j] = 0
             else:
                 img[i, j] = 255
 
     return img
+
+def clear_img_rec(img, rec):
+    """
+    Clear the image from certain recs
+    """
+    rec.draw(img, 155)
+    for j in range(int(rec.x), int(rec.x + rec.w)):
+        for i in range(int(rec.y), int(rec.y + rec.h)):
+            img[i, j] = 255
+
 
 def look_for_key(img_gray):
     """
@@ -157,12 +171,17 @@ def look_for_key(img_gray):
     for key in key_files:
         key_recs = locate_images(img_gray, [cv2.imread(key, 0)], key_lower, key_upper, key_thresh)
         key_recs = merge_recs([j for i in key_recs for j in i], 0.5)
-        if key_recs:
+        if len(key_recs) != 0:
             key_found += 1
-            current_key = key.split("/")[-1][:-4]
+            current_key = Key(key_recs[0], key.split("/")[-1][:-4].split("_")[0]) # Key inpu needed : g_3.png is the third g key exemple. 
+            clear_img_rec(img_gray, key_recs[0])
 
-    if key_found > 1:
-        print("More than one key found, should not happen")
+    # if key_found > 1:
+    #     print("More than one key found, should not happen")
+    # elif key_found == 1:
+    #     print("KEY FOUND")
+    # else:
+    #     print("NO KEY FOUND")
 
     return current_key
 
@@ -171,19 +190,29 @@ def look_for_time_indication(img):
     Scanning the image to find time indications
     We need the colored image
     """
-    keys = [] 
+    time_indications = [] 
     # We get all time indications : 
     for time_indication in glob.glob("resources/template/time_indication/*"):
-        print(time_indication)
         # Here all should be folders
         if os.path.isdir(time_indication):
             time_recs = locate_images(img, [cv2.imread(i, 0) for i in glob.glob(time_indication + "/*.png")], 50, 110, 0.7)
             time_recs = merge_recs([j for i in time_recs for j in i], 0.5)
             if len(time_recs) != 0:
                 for t in time_recs:
-                    keys.append((time_indication.split("/")[-1], t))
+                    time_indications.append(TimeIndication(t, time_indication.split("/")[-1]))
+
+    if len(time_indications) > 1:
+        print("More than one time indication found")
+        time_indications = time_indications[0]
+    elif len(time_indications) == 0:
+        time_indications = None
+    else:
+        time_indications = time_indications[0]
+
+    if time_indications is not None:
+        clear_img_rec(img, time_indications.rec)
    
-    return keys
+    return time_indications
 
 
 def remove_note(list_where_remove, global_list):
@@ -199,7 +228,61 @@ def remove_note(list_where_remove, global_list):
                         list_where_remove.remove(note1)
                         break
 
-def scan_one_patch(img_gray, staffs):
+
+def find_double_recs(img_gray):
+    """
+    Find double recs
+    """
+
+    double_total = []
+
+    for i in range(-16, 17, 2):
+        
+        double_imgs = [cv2.imread(doubles_file, 0) for doubles_file in doubles_files]
+
+        for j, d in enumerate(double_imgs):
+            cols, rows = d.shape
+            rot = cv2.getRotationMatrix2D((rows/2, cols/2),i,1)
+            double_imgs[j] = cv2.warpAffine(d,rot, (rows, cols), borderValue=255)
+
+        # cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
+
+        double_total += locate_images(img_gray, double_imgs, doubles_lower, doubles_upper, doubles_thresh)
+
+    doubles = merge_recs([j for i in double_total for j in i], 0.5)
+
+    return doubles
+
+def find_croche_recs(img_gray):
+    """
+    Find croche recs
+    """
+
+    croche_total = []
+
+    # for i in range(-16, 17, 2):
+        
+    croche_imgs = [cv2.imread(croches_file, 0) for croches_file in croches_files]
+
+    # for j, d in enumerate(croche_imgs):
+    #     cols, rows = d.shape
+    #     print("shape", croche_imgs[j].shape)
+    #     #rot = cv2.getRotationMatrix2D((rows, cols),i,1)
+    #     # croche_imgs[j] = cv2.imread(croches_file[j], 0)# cv2.warpAffine(d,rot, (rows, cols), borderValue=np.NaN)
+    #     for x in range(croche_imgs[j].shape[0]):
+    #         for y in range(croche_imgs[j].shape[1]):
+    #             if croches_imgs[j][x, y] == 0:
+    #                 croches_imgs[j][x, y] = np.NaN
+
+        # cv2.imwrite("output/test" + str(i) + ".png", double_imgs[1])
+
+    croche_total += locate_images(img_gray, croche_imgs, croches_lower, croches_upper, croches_thresh)
+
+    croches = merge_recs([j for i in croche_total for j in i], 0.5)
+
+    return croches
+
+def scan_one_patch(img_gray, staffs, key=None):
     """
     Scanning one patch of the image
     """
@@ -208,13 +291,9 @@ def scan_one_patch(img_gray, staffs):
 
     flat_recs = merge_recs([j for i in flat_recs for j in i], 0.5)
 
-    doubles_recs = locate_images(img_gray, doubles_imgs, doubles_lower, doubles_upper, doubles_thresh)
+    doubles_recs = find_double_recs(img_gray)
 
-    doubles_recs = merge_recs([j for i in doubles_recs for j in i], 0.5)
-
-    croches_recs = locate_images(img_gray, croches_imgs, croches_lower, croches_upper, croches_thresh) 
-
-    croches_recs = merge_recs([j for i in croches_recs for j in i], 0.5)
+    croches_recs = find_croche_recs(img_gray)
 
     croches_indiv_recs = []
 
@@ -239,7 +318,12 @@ def scan_one_patch(img_gray, staffs):
 
     whole_recs = merge_recs([j for i in whole_recs for j in i], 0.5)
 
-    bars_recs = locate_images(img_gray, bars_imgs, bars_lower, bars_upper, bars_thresh)
+    space_staffs = staffs[-1] - staffs[0]
+    h_img = bars_imgs[0].shape[0]
+
+    bars_recs = locate_images(img_gray, bars_imgs, int((space_staffs * 1.1 / h_img)*100), int(space_staffs / h_img * 1.4 * 100), bars_thresh)
+
+    print("bars", space_staffs, bars_imgs[0].shape, int((space_staffs * 1.1 / h_img)*100), int(space_staffs / h_img * 1.4 * 100))
 
     bars_recs = merge_recs([j for i in bars_recs for j in i], 0.5)
 
@@ -247,11 +331,12 @@ def scan_one_patch(img_gray, staffs):
     #     for r in sharp_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
     # staff_flats = [Note(r, "flat", box)
     #     for r in flat_recs if abs(r.middle[1] - box.middle[1]) < box.h*5.0/8.0]
-    quarter_notes = [Note(r, 4, staffs) for r in quarter_recs]
-    half_notes = [Note(r, 2, staffs) for r in half_recs]
-    whole_notes = [Note(r, 1, staffs) for r in whole_recs]
+    quarter_notes = [Note(r, 4, staffs, key=key) for r in quarter_recs]
+    half_notes = [Note(r, 2, staffs, key=key) for r in half_recs]
+    whole_notes = [Note(r, 1, staffs, key=key) for r in whole_recs]
 
     sorted_notes = sorted(quarter_notes + half_notes + whole_notes, key=lambda x:x.rec.x)
+
 
     # Find the sharp notes
     for sharp in sharp_recs:
@@ -275,14 +360,16 @@ def scan_one_patch(img_gray, staffs):
     # Comme certaines doubles peuvent aussi etre des croches, on passe d'abord sur les croches
     # puis on pourra potentiellement override avec des doubles.
     for t in croches_recs:
+        t.draw(img_gray, 0, 1)
         for q in quarter_notes:
             if q.is_contained_time(t, dilatation=q.rec.w/2):
-                t.draw(img_gray, 0, 1)
+                # t.draw(img_gray, 0, 1)
                 q.sym = 8
 
     for t in doubles_recs:
+        t.draw(img_gray, (150, 150, 150), 2)
         for q in quarter_notes:
-            if q.is_contained_time(t, dilatation=q.rec.w/2):
+            if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
                 t.draw(img_gray, 0, 1)
                 q.sym = 16
 
@@ -290,7 +377,7 @@ def scan_one_patch(img_gray, staffs):
     for t in croches_indiv_recs:
         for q in quarter_notes:
             if t.contains_in_x(q.rec, dilatation=q.rec.w/2):
-                t.draw(img_gray, 0, 1)
+                # t.draw(img_gray, 0, 1)
                 q.sym = 8
 
 

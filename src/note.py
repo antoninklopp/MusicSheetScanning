@@ -1,6 +1,7 @@
 from src.rectangle import Rectangle
 import cv2
 import numpy as np
+from src.key import Key
 
 note_step = 0.0625
 
@@ -8,14 +9,17 @@ note_names = ["g", "f", "e", "d", "c", "b", "a"]
 
 class Note(object):
 
-    def __init__(self, rec, sym, staffs, key="g"):
+    def __init__(self, rec, sym, staffs, key=Key(Rectangle(0, 0, 0, 0), "g")):
         self.rec = rec
         self.sym = sym
+        self.note_name = None
 
         self.middle = rec.y + (rec.h / 2.0)
 
-        self.note_int = 0
+        self.note_int = 1000
+
         self.find_height(staffs, key=key)
+        self.lilypond_time = ""
 
     def set_as_sharp(self):
         self.note += "#"
@@ -26,7 +30,7 @@ class Note(object):
     def find_height(self, staffs, key):
         """
         param : staffs : A list of the five staffs on the sheet, corresponding to their average height (number should be ints)
-        TODO : Need to test this function
+        param : key : the current key of the staffs (g, f, ...)
         """
         # first we calculate the different height between staffs
         height = []
@@ -57,19 +61,23 @@ class Note(object):
         Find the stringified note corresponding to a given integer
         Our starting point note is g5
         """
-        if key == "g":
+        self.note_int = int(round(note_int))
+        if key.name == "g":
             note_int = int(round(note_int))
-            self.note_int = note_int
-            note_name = note_names[note_int % 7]
-            note_height = 5 - note_int // 7
-            if note_name == "a" or note_name == "b":
-                note_height -= 1
-            self.note_height = note_height
-            self.note_name = note_name + str(note_height)
-            return note_name + str(note_height)
+        elif key.name == "f":
+            note_int = int(round(note_int)) + 12
+        elif key.name == "c3":
+            note_int = int(round(note_int)) - 1
         else:
-            print("Error, key unknown, not implemented")
+            print("Error, key unknown, not implemented", key.name)
             return None
+        note_name = note_names[note_int % 7]
+        note_height = 5 - note_int // 7
+        if note_name == "a" or note_name == "b":
+            note_height -= 1
+        self.note_height = note_height
+        self.note_name = note_name + str(note_height)
+        return note_name + str(note_height)
 
 
     def get_color(self):
@@ -106,7 +114,7 @@ class Note(object):
         Over the note if the note is > 5
         """
         if rec.contains_in_x(self.rec, dilatation):
-            if self.note_int < 5:
+            if self.note_int > 5:
                 if rec.middle[1] < self.rec.middle[1]:
                     print("croche", self.note_name, self.note_int, rec.middle, self.rec.middle)
                     return True
@@ -117,16 +125,34 @@ class Note(object):
 
         return False
 
-    def lilypond_notation(self):
+    def lilypond_notation(self, key="g"):
         pitch = ""
+        self.find_note(self.note_int, key) # Find the note with the current key
         if self.note_height < 3:
             pitch = "," * (3 - self.note_height)
         else:
             pitch = "'" * (self.note_height - 3)
 
-        return self.note_name[0] + pitch + str(self.sym)
+        return self.note_name[0] + pitch + str(self.sym) + self.lilypond_time
 
     def __str__(self):
         if self.note_name:
             return self.note_name + " " + self.get_name_time()
         return "UNKNOWN NOTE"
+
+    def shift_rec(self, shift_x, shift_y):
+        """
+        shit the rectangle in x and in y
+        """
+        self.rec.shift(shift_x, shift_y)
+        self.middle = self.rec.y + (self.rec.h / 2.0)
+
+    def add_time(self, value):
+        self.plus_time = value
+
+        if self.sym * value == 2:
+            self.lilypond_time = "."
+        elif self.sym * value == 3:
+            self.lilypond_time = ".."
+
+
