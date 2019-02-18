@@ -216,7 +216,8 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
             cv2.imwrite("output/output_projection.png", img_output)
             cv2.imwrite("output/gray.png", img)
             staffs_pre, correct = staffs_precise(patch, medium_staff)
-            if staffs_pre is None or correct is False:
+            if staffs_pre is None or correct is False or (staffs_pre[0][0] - medium_staff[1][0]) \
+                > (staffs_pre[0][1] - staffs_pre[0][0]):
                 print("NO STAFF IN THIS PATCH", begin_x, end_x, begin_y, end_y, img.shape)
                 print(medium_staff)
                 staffs_pre = [[int(i[0]/medium_staff[0]), int(i[1]/medium_staff[0])] for i in medium_staff[1:len(medium_staff)]]
@@ -225,7 +226,7 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
             print("staff pre", staffs_pre)
             assert(len(staffs_pre) == 5)
 
-            space_between_staff = math.ceil(sum([i[1] - i[0] for i in staffs_pre])//4) + 1
+            space_between_staff = max(sum([i[1] - i[0] for i in staffs_pre])//4, 2)
 
             print(space_between_staff)
 
@@ -250,7 +251,7 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
                         # print("Here a note")
                         pass
                     else:
-                        for i in range(staff_begin - space_between_staff//2 - 1, staff_end+space_between_staff + 1):
+                        for i in range(staff_begin - space_between_staff//2 - 1, staff_end+space_between_staff//2 + 1):
                             # print("ERASE")
                             patch[i, j] = 255
                             if img_output is not None:

@@ -6,7 +6,7 @@ import os
 class TestFull:
 
     def test_full_sheet(self):
-        img_file = "Images/Beethoven/beethoven-01.png"
+        img_file = "Images/Beethoven/beethoven-02.png"
         get_cleaned_sheet(img_file)
         print("Creating pdf file ....")
         os.system("lilypond output/sheet_reconstructed.ly")
