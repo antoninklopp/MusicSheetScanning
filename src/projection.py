@@ -12,6 +12,7 @@ from src.instrument import Instrument
 from src.key import Key
 from src.rectangle import Rectangle
 from src.segmentation import segmentate
+import math
 
 img_file = "Images/sonate-1.png"
 
@@ -86,7 +87,7 @@ def create_patches(img, staffs, patch_number = 3):
             yield current_patch, max(0, beginning_staff - int((end_staff-beginning_staff))), min(img.shape[0], end_staff + int((end_staff-beginning_staff))), \
             i, i + space_y
 
-def staffs_precise(img, medium_staff):
+def staffs_precise(img, medium_staff, first_pass=False):
     """
     Get the precise location of every staffs
     """
@@ -124,12 +125,16 @@ def staffs_precise(img, medium_staff):
             in_peak = True
 
     print(staffs)
+
+    if first_pass is True:
+        return staffs, len(staffs) == 5
     
     if len(staffs) != 5:
 
         if number_staffs < 3:
             # Must have been an error here. 
             # We stop here
+            print("NUMBER OF STAFFS TOO LOW")
             return None, None
 
         print("Strange number of staffsn seems to be", number_staffs, "here")
@@ -163,6 +168,28 @@ def staffs_precise(img, medium_staff):
 
     return staffs, len(staffs) == 5
 
+def get_medium_staff(img, staffs, patch_number):
+    all_staffs = []
+    number_staffs = 0
+    for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(reversed(list(create_patches(img, staffs, patch_number=patch_number)))):
+        staffs_pre, correct = staffs_precise(patch, [0, [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]], first_pass=True)
+        if correct:
+            all_staffs.append(staffs_pre)
+            number_staffs += 1
+
+
+    medium_staff = []
+    for i in range(5):
+        medium = []
+        for j in range(len(all_staffs)):
+            medium.append(all_staffs[j][i])
+        medium.sort(key=lambda x:(x[0]+x[1])/2.0)
+
+        medium_staff.append([i * len(medium) for i in medium[len(medium)//2]])
+
+    return [number_staffs] + medium_staff
+
+
 def process_patches(img, staffs, img_output, img_file, number_instruments=1):
     """
     Process all the patches and extract the notes
@@ -175,8 +202,12 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
     all_bars = []
     instruments = [Instrument(i) for i in range(number_instruments)]
     img_clean_gray = cv2.imread(img_file, 0)
+
+    patch_number = 3
+
+    medium_staff = get_medium_staff(img, staffs, patch_number)
+
     with open("output/output_notes.txt", "w") as sheet:
-        patch_number = 5
         for index_patch, (patch, begin_x, end_x, begin_y, end_y) in enumerate(create_patches(img, staffs, patch_number=patch_number)):
             print(index_patch, patch_number)
             staff_number = index_patch//patch_number # Useful to check the number of instruments
@@ -185,17 +216,16 @@ def process_patches(img, staffs, img_output, img_file, number_instruments=1):
             cv2.imwrite("output/output_projection.png", img_output)
             cv2.imwrite("output/gray.png", img)
             staffs_pre, correct = staffs_precise(patch, medium_staff)
-            if staffs_pre is None:
+            if staffs_pre is None or correct is False:
                 print("NO STAFF IN THIS PATCH", begin_x, end_x, begin_y, end_y, img.shape)
-                continue
+                print(medium_staff)
+                staffs_pre = [[int(i[0]/medium_staff[0]), int(i[1]/medium_staff[0])] for i in medium_staff[1:len(medium_staff)]]
+
             all_staff += 1
-            if correct is True:
-                correct_staff += 1
-                medium_staff = [medium_staff[0] + 1] + [[previous[0] + new[0], previous[1] + new[1]] for new, previous in zip(staffs_pre, medium_staff[1:])]
-            
+            print("staff pre", staffs_pre)
             assert(len(staffs_pre) == 5)
 
-            space_between_staff = sum([i[1] - i[0] for i in staffs_pre])//4
+            space_between_staff = math.ceil(sum([i[1] - i[0] for i in staffs_pre])//4) + 1
 
             print(space_between_staff)
 
@@ -288,25 +318,21 @@ def remove_white_around(img_file):
     i = 0
     while np.sum(img_file[i, :]) > (img_file.shape[0]*9.0/10) * 255:
         img_file = img_file[1:img_file.shape[0], :]
-        print("REMOVES")
         i += 1
 
     i = img_file.shape[0] - 1
     while np.sum(img_file[i, :]) > (img_file.shape[0]*9.0/10) * 255:
         img_file = img_file[0:img_file.shape[0] - 1, :]
-        print("REMOVES")
         i -= 1
 
     j = 0
     while np.sum(img_file[:, j]) > (img_file.shape[0]*9.0/10) * 255:
         img_file = img_file[:, 1:img_file.shape[1]]
-        print("REMOVES")
         j += 1
 
     j = img_file.shape[1] - 1
     while np.sum(img_file[:, j]) > (img_file.shape[0]*9.0/10) * 255: #(img_file.shape[1]-2) * 255:
         img_file = img_file[:, 0:img_file.shape[1] - 1]
-        print("REMOVES")
         j -= 1
 
     return img_file
@@ -321,5 +347,6 @@ def get_cleaned_sheet(img_file):
     img = remove_white_around(img)
     print("shape after", img.shape)
     staffs, number_instrument = get_staffs(img)
+    print("found", number_instrument, "instruments")
     return process_patches(img, staffs, cv2.imread(img_file), img_file, number_instrument)
     
